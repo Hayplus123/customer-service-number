@@ -120,52 +120,136 @@
 
     // 🗂️ Customer Database (with response logs array)
     const customerDatabase = {
-      "1001": { name: "Alex", active: true, logs: [] },
-      "1002": { name: "Jordan", active: false, logs: [] }
+      "1": { name: "Alex", active: true, logs: [] },
+      "2": { name: "Jordan", active: true, logs: [] }
     };
 
     // 🌳 Data-Driven Menu Tree Structure
     const menuTree = {
       "MAIN_MENU": {
-        text: "Press 1 for Orders, Press 2 for Support.",
+        text: "Press 1 for booking schedule, Press 2 for Support.",
         parent: null,
         options: {
-          "1": "ORDER_MENU",
-          "2": "SUPPORT_MENU"
+          "1": "BOOK_SCHEDULE",
+          "2": ""
         }
       },
-      "ORDER_MENU": {
-        text: "Press 1 for Status, Press 2 to Cancel. Press * to go back.",
+      "BOOK_SCHEDULE": {
+        text: "you have pressed booking schedule. Press 1 for booking a new schedule. Press * to go back.",
         parent: "MAIN_MENU",
         options: {
-          "1": "ORDER_STATUS",
-          "2": "ORDER_CANCEL"
+          "1": "BOOK_NEW_SCHEDULE"
         }
       },
-      "SUPPORT_MENU": {
-        text: "Press 1 for Tech Help, Press 2 for Representative. Press * to go back.",
-        parent: "MAIN_MENU",
+      "BOOK_NEW_SCHEDULE": {
+        text: "Press the month you would like to book a schedule. If the month is one digit press 0 Press * to go back.",
+        parent: "BOOK_SCHEDULE",
         options: {
-          "1": "TECH_HELP",
-          "2": "REP_HELP"
+          "0": "BLANK_MONTH",
+          "1": "MONTH_START_WITH_ONE"
         }
       },
-      "ORDER_STATUS": {
-        text: "Your order #4582 is out for delivery! Press * to return.",
-        parent: "ORDER_MENU",
-        options: {}
+      "BLANK_MONTH": {
+        text: "You have pressed 0. please enter your second number of the month. Press * to return.",
+        parent: "BOOK_NEW_SCHEDULE",
+        options: {
+            "1": "JAN",
+            "2": "FEB",
+            "3": "MAR",
+            "4": "APR",
+            "5": "MAY",
+            "6": "JUN",
+            "7": "JUL",
+            "8": "AUG",
+            "9": "SEP",
+        }
       },
-      "ORDER_CANCEL": {
+      "JAN": {
         text: "To cancel, visit our website. Press * to return.",
         parent: "ORDER_MENU",
         options: {}
       },
-      "TECH_HELP": {
+      "FEB": {
         text: "Tech support is active. Press * to return.",
         parent: "SUPPORT_MENU",
         options: {}
       },
-      "REP_HELP": {
+      "MAR": {
+        text: "Transferring to representative... Press * to return.",
+        parent: "SUPPORT_MENU",
+        options: {}
+      },
+      "APR": {
+        text: "Transferring to representative... Press * to return.",
+        parent: "SUPPORT_MENU",
+        options: {}
+      },
+      "MAY": {
+        text: "Transferring to representative... Press * to return.",
+        parent: "SUPPORT_MENU",
+        options: {}
+      },
+      "JUN": {
+        text: "Transferring to representative... Press * to return.",
+        parent: "SUPPORT_MENU",
+        options: {}
+      },
+      "JUL": {
+        text: "Transferring to representative... Press * to return.",
+        parent: "SUPPORT_MENU",
+        options: {}
+      },
+      "AUG": {
+        text: "Transferring to representative... Press * to return.",
+        parent: "SUPPORT_MENU",
+        options: {}
+      },
+      "SEP": {
+        text: "Transferring to representative... Press * to return.",
+        parent: "SUPPORT_MENU",
+        options: {}
+      },
+      "": {
+        text: "Transferring to representative... Press * to return.",
+        parent: "SUPPORT_MENU",
+        options: {}
+      },
+      "": {
+        text: "Transferring to representative... Press * to return.",
+        parent: "SUPPORT_MENU",
+        options: {}
+      },
+      "": {
+        text: "Transferring to representative... Press * to return.",
+        parent: "SUPPORT_MENU",
+        options: {}
+      },
+      "": {
+        text: "Transferring to representative... Press * to return.",
+        parent: "SUPPORT_MENU",
+        options: {}
+      },
+      "": {
+        text: "Transferring to representative... Press * to return.",
+        parent: "SUPPORT_MENU",
+        options: {}
+      },
+      "": {
+        text: "Transferring to representative... Press * to return.",
+        parent: "SUPPORT_MENU",
+        options: {}
+      },
+      "": {
+        text: "Transferring to representative... Press * to return.",
+        parent: "SUPPORT_MENU",
+        options: {}
+      },
+      "": {
+        text: "Transferring to representative... Press * to return.",
+        parent: "SUPPORT_MENU",
+        options: {}
+      },
+      "": {
         text: "Transferring to representative... Press * to return.",
         parent: "SUPPORT_MENU",
         options: {}
@@ -254,7 +338,7 @@
       } else {
         activeCustomer = customer;
         currentState = "CONFIRM_IDENTITY";
-        updateDisplay(`Hello ${activeCustomer.name}! Press 1 for Yes, 2 for No.`);
+        updateDisplay(`Hello just to confirm, are you ${activeCustomer.name}? Press 1 for Yes, 2 for No.`);
       }
     }
 
