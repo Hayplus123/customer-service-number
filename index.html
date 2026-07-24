@@ -99,7 +99,7 @@
 </head>
 <body>
 
-    <div class="version-tag">ver 1.5</div>
+    <div class="version-tag">ver 1.6</div>
   <div class="phone-container">
     <div id="display">
       <div id="screen-text">Welcome! Enter your code followed by #</div>
@@ -381,17 +381,6 @@
       }
 
       // ⚡ Handle Dynamic Input Collection Mode
-      // 🔒 Checking 4-Digit Special Code
-if (currentState === "SPECIAL_CODE") {
-  if (currentInput === "1291") {
-    updateDisplay("✅ Access Granted!");
-    currentState = "MAIN_MENU"; // Or whichever menu comes next
-  } else {
-    updateDisplay("❌ Incorrect Code. Try again.");
-  }
-  currentInput = "";
-  inputBuffer.textContent = "";
-}
       if (currentMenu.type === "COLLECT_DIGITS") {
         if (val >= "0" && val <= "9") {
           currentInput += val;
@@ -431,6 +420,17 @@ if (currentState === "SPECIAL_CODE") {
                 inputBuffer.textContent = "";
                 updateDisplay(`❌ Invalid day. ${monthName} only has ${maxAllowedDays} days.`);
               }
+              // 🔒 Checking 4-Digit Special Code
+              if (currentState === "SPECIAL_CODE") {
+                if (currentInput === "2983") {
+                   updateDisplay("✅ Access Granted!");
+                  currentState = "MAIN_MENU"; // Or whichever menu comes next
+                } else {
+                        updateDisplay("❌ Incorrect Code. Try again.");
+                        }
+                currentInput = "";
+                inputBuffer.textContent = "";
+                }
             }
           }
         }
@@ -476,3 +476,4 @@ if (currentState === "SPECIAL_CODE") {
 
 </body>
 </html>
+
