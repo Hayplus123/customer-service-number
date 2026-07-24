@@ -358,7 +358,7 @@ if (currentMenu.type === "COLLECT_DIGITS") {
           }
         }
         return;
-      }
+      
 
       // Standard Option Navigation
       if (currentMenu.options && currentMenu.options[val]) {
@@ -370,7 +370,7 @@ if (currentMenu.type === "COLLECT_DIGITS") {
       } else {
         updateDisplay("Invalid option. " + currentMenu.text);
       }
-    }
+    
 
     // Display Admin Logs
     function showAdminLogs() {
