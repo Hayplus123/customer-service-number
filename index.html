@@ -99,7 +99,7 @@
 </head>
 <body>
 
-    <div class="version-tag">ver 1.0</div>
+    <div class="version-tag">ver 1.1</div>
   <div class="phone-container">
     <div id="display">
       <div id="screen-text">Welcome! Enter your code followed by #</div>
@@ -154,11 +154,11 @@
     // 🌳 Data-Driven Menu Tree Structure
     const menuTree = {
       "MAIN_MENU": {
-        text: "Press 1 for Orders, Press 2 for Scheduling.",
+        text: "Press 1 for Scheduling, Press 2 for entering a special code.",
         parent: null,
         options: {
-          "1": "ORDER_MENU",
-          "2": "BOOK_SCHEDULE"
+          "1": "BOOK_SCHEDULE",
+          "2": "SPECIAL_CODE"
         }
       },
       
@@ -190,6 +190,64 @@
         text: "Your schedule has been confirmed! Press * to return.",
         parent: "MAIN_MENU",
         options: {}
+      },
+      
+      "SPECIAL_CODE": {
+        text: "Please enter your 4 digit code",
+        parent: "MAIN_MENU",
+        length: 4,
+        options: {
+          "1291": "GAME_MODE"
+        }
+      },
+      "GAME_MODE": {
+        text: "you have entered spi*ita* mode",
+        parent: "GAME_MODE",
+        options: {
+          "1": ""
+        }
+      },"": {
+        text: "",
+        parent: "",
+        options: {
+          "1": ""
+        }
+      },"": {
+        text: "",
+        parent: "",
+        options: {
+          "1": ""
+        }
+      },"": {
+        text: "",
+        parent: "",
+        options: {
+          "1": ""
+        }
+      },"": {
+        text: "",
+        parent: "",
+        options: {
+          "1": ""
+        }
+      },"": {
+        text: "",
+        parent: "",
+        options: {
+          "1": ""
+        }
+      },"": {
+        text: "",
+        parent: "",
+        options: {
+          "1": ""
+        }
+      },"": {
+        text: "",
+        parent: "",
+        options: {
+          "1": ""
+        }
       }
     };
 
