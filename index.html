@@ -311,10 +311,18 @@
       }
 
       // ⚡ Handle Dynamic Input Collection Mode
-      if (currentMenu.type === "COLLECT_DIGITS") {
-        if (val >= "0" && val <= "9") {
-          currentInput += val;
-          inputBuffer.textContent = currentInput;
+if (currentMenu.type === "COLLECT_DIGITS") {
+  if (val >= "0" && val <= "9") {
+    currentInput += val;
+    inputBuffer.textContent = currentInput; // 👈 Shows typed digit instantly!
+
+    // If we reached 2 digits, evaluate immediately
+    if (currentInput.length === currentMenu.length) {
+      // Validate month or day...
+    }
+  }
+  return;
+}
 
           if (currentInput.length === currentMenu.length) {
             // 🗓️ 1. Handling Month Selection
