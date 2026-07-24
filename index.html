@@ -1,20 +1,95 @@
-<div class="phone-container">
-  <!-- 1. Display Screen -->
-  <div id="display">Press a key...</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Automated Phone System</title>
+  <style>
+    /* Centers the entire phone in the middle of your screen */
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background-color: #f0f2f5;
+      font-family: sans-serif;
+    }
 
-  <!-- 2. Keypad Area -->
-  <div class="keypad">
-    <button class="key">1</button>
-    <button class="key">2</button>
-    <button class="key">3</button>
-    <button class="key">4</button>
-    <button class="key">5</button>
-    <button class="key">6</button>
-    <button class="key">7</button>
-    <button class="key">8</button>
-    <button class="key">9</button>
-    <button class="key">*</button>
-    <button class="key">0</button>
-    <button class="key">#</button>
+    /* Main Phone Shell */
+    .phone-container {
+      width: 280px;
+      background-color: #1a1a1a;
+      padding: 20px;
+      border-radius: 25px;
+      box-shadow: 0px 10px 25px rgba(0,0,0,0.3);
+    }
+
+    /* Display Screen at the top */
+    #display {
+      background-color: #000;
+      color: #00ff66; /* Retro green screen text */
+      font-size: 1.2rem;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      margin-bottom: 20px;
+      min-height: 24px;
+    }
+
+    /* 3-Column Keypad Layout */
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr); /* 3 equal columns 📐 */
+      gap: 15px;                            /* Space between buttons */
+    }
+
+    /* Individual Keypad Buttons */
+    .key {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%; /* Makes them circular ⚪ */
+      border: none;
+      background-color: #333;
+      color: white;
+      font-size: 1.4rem;
+      font-weight: bold;
+      cursor: pointer;
+      justify-self: center; /* Centers each button inside its grid cell */
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    /* Hover & Active Effects */
+    .key:hover {
+      background-color: #555;
+    }
+
+    .key:active {
+      transform: scale(0.95); /* Slight press down effect when clicked 👆 */
+    }
+  </style>
+</head>
+<body>
+
+  <div class="phone-container">
+    <!-- 1. Display Screen -->
+    <div id="display">Press a key...</div>
+
+    <!-- 2. Keypad Area -->
+    <div class="keypad">
+      <button class="key">1</button>
+      <button class="key">2</button>
+      <button class="key">3</button>
+      <button class="key">4</button>
+      <button class="key">5</button>
+      <button class="key">6</button>
+      <button class="key">7</button>
+      <button class="key">8</button>
+      <button class="key">9</button>
+      <button class="key">*</button>
+      <button class="key">0</button>
+      <button class="key">#</button>
+    </div>
   </div>
-</div>
+
+</body>
+</html>
