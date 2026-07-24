@@ -15,7 +15,7 @@
     }
 
     .phone-container {
-      width: 300px;
+      width: 320px;
       background-color: #1a1a1a;
       padding: 25px;
       border-radius: 25px;
@@ -35,11 +35,12 @@
       font-size: 0.95rem;
       color: #00ff66;
       margin-bottom: 10px;
-      min-height: 2.8em;
+      min-height: 3.5em;
       display: flex;
       align-items: center;
       justify-content: center;
       line-height: 1.3;
+      white-space: pre-line;
     }
 
     #input-buffer {
@@ -117,10 +118,10 @@
     const inputBuffer = document.getElementById('input-buffer');
     const keys = document.querySelectorAll('.key');
 
-    // Customer Database 🗂️
+    // 🗂️ Customer Database (with response logs array)
     const customerDatabase = {
-      "1001": { name: "Alex", active: true },
-      "1002": { name: "Jordan", active: false }
+      "1001": { name: "Alex", active: true, logs: [] },
+      "1002": { name: "Jordan", active: false, logs: [] }
     };
 
     // 🌳 Data-Driven Menu Tree Structure
@@ -175,6 +176,7 @@
     let activeCustomer = null;
     let currentInput = "";
 
+    // 🔊 Text-To-Speech
     function speak(text) {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
@@ -184,30 +186,42 @@
       }
     }
 
+    // Update Screen & Speak Text
     function updateDisplay(text) {
       screenText.textContent = text;
       speak(text);
     }
 
+    // Keypad Event Listeners
     keys.forEach(key => {
       key.addEventListener('click', () => {
         handleKeyPress(key.textContent);
       });
     });
 
+    // Main Router
     function handleKeyPress(val) {
+      // 1. Admin State
+      if (currentState === "ADMIN_MODE") {
+        if (val === "*") {
+          resetToIdle("Logged out of Admin Mode.");
+        }
+        return;
+      }
+
+      // 2. Identity Confirmation State
       if (currentState === "CONFIRM_IDENTITY") {
         handleIdentityConfirmation(val);
         return;
       }
 
-      // Check if currentState is part of the menuTree 🌳
+      // 3. Customer Navigation State
       if (menuTree[currentState]) {
         handleMenuNavigation(val);
         return;
       }
 
-      // Default keypad typing behavior for IDLE state
+      // 4. Keypad Typing (IDLE State)
       if (val === '*') {
         currentInput = "";
         inputBuffer.textContent = "";
@@ -221,7 +235,16 @@
       }
     }
 
+    // Code Submission Handler (# key)
     function processCodeSubmission(code) {
+      // Check Admin Code
+      if (code === "9999") {
+        currentState = "ADMIN_MODE";
+        showAdminLogs();
+        return;
+      }
+
+      // Check Customer Code
       const customer = customerDatabase[code];
 
       if (!customer) {
@@ -235,6 +258,7 @@
       }
     }
 
+    // Handle Yes (1) / No (2)
     function handleIdentityConfirmation(val) {
       if (val === "1") {
         currentState = "MAIN_MENU";
@@ -246,6 +270,7 @@
       }
     }
 
+    // Handle Sub-Menu Navigation & Logging 📝
     function handleMenuNavigation(val) {
       const currentMenu = menuTree[currentState];
 
@@ -257,6 +282,10 @@
           resetToIdle("Logged out. Welcome! Enter your code followed by #");
         }
       } else if (currentMenu.options[val]) {
+        // Log selection
+        if (activeCustomer) {
+          activeCustomer.logs.push(val);
+        }
         currentState = currentMenu.options[val];
         updateDisplay(menuTree[currentState].text);
       } else {
@@ -264,6 +293,21 @@
       }
     }
 
+    // Display Admin Logs 📊
+    function showAdminLogs() {
+      let summary = "📊 CUSTOMER LOGS:\n";
+
+      for (let id in customerDatabase) {
+        const cust = customerDatabase[id];
+        const logHistory = cust.logs.length > 0 ? cust.logs.join(" > ") : "No activity";
+        summary += `${cust.name} (${id}): [${logHistory}]\n`;
+      }
+
+      summary += "\nPress * to exit.";
+      updateDisplay(summary);
+    }
+
+    // Reset System
     function resetToIdle(message) {
       currentState = "IDLE";
       activeCustomer = null;
