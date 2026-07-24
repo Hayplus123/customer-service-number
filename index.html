@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Automated Phone System</title>
   <style>
-    /* Centers the phone on the screen */
     body {
       display: flex;
       justify-content: center;
@@ -15,7 +14,6 @@
       font-family: sans-serif;
     }
 
-    /* Main Phone Container */
     .phone-container {
       width: 300px;
       background-color: #1a1a1a;
@@ -24,7 +22,6 @@
       box-shadow: 0px 10px 25px rgba(0,0,0,0.3);
     }
 
-    /* Display Screen Area */
     #display {
       background-color: #000;
       border-radius: 12px;
@@ -34,7 +31,6 @@
       border: 2px solid #333;
     }
 
-    /* System prompt / Green LCD text */
     #screen-text {
       font-size: 0.95rem;
       color: #00ff66;
@@ -46,7 +42,6 @@
       line-height: 1.3;
     }
 
-    /* Typed digits buffer */
     #input-buffer {
       font-size: 1.6rem;
       color: #ffffff;
@@ -55,14 +50,12 @@
       min-height: 1.4em;
     }
 
-    /* 3-Column Keypad Layout */
     .keypad {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 15px;
     }
 
-    /* Circular Keypad Buttons */
     .key {
       width: 65px;
       height: 65px;
@@ -96,13 +89,11 @@
 <body>
 
   <div class="phone-container">
-    <!-- Display Screen -->
     <div id="display">
       <div id="screen-text">Welcome! Enter your code followed by #</div>
       <div id="input-buffer"></div>
     </div>
 
-    <!-- Keypad Grid -->
     <div class="keypad">
       <button class="key">1</button>
       <button class="key">2</button>
@@ -118,66 +109,105 @@
       <button class="key">#</button>
     </div>
 
-    <div class="instructions">Press * to Clear | Press # to Submit</div>
+    <div class="instructions">Press * to Clear / Back | Press # to Submit</div>
   </div>
 
   <script>
-    // DOM Elements
     const screenText = document.getElementById('screen-text');
     const inputBuffer = document.getElementById('input-buffer');
     const keys = document.querySelectorAll('.key');
 
     // Customer Database 🗂️
     const customerDatabase = {
-      "1001": {
-        name: "Alex",
-        active: true,
-        customPrompt: "Press 1 for Order Status, Press 2 for Billing."
+      "1001": { name: "Alex", active: true },
+      "1002": { name: "Jordan", active: false }
+    };
+
+    // 🌳 Data-Driven Menu Tree Structure
+    const menuTree = {
+      "MAIN_MENU": {
+        text: "Press 1 for Orders, Press 2 for Support.",
+        parent: null,
+        options: {
+          "1": "ORDER_MENU",
+          "2": "SUPPORT_MENU"
+        }
       },
-      "1002": {
-        name: "Jordan",
-        active: false,
-        customPrompt: "Press 1 for Account Renewal."
+      "ORDER_MENU": {
+        text: "Press 1 for Status, Press 2 to Cancel. Press * to go back.",
+        parent: "MAIN_MENU",
+        options: {
+          "1": "ORDER_STATUS",
+          "2": "ORDER_CANCEL"
+        }
+      },
+      "SUPPORT_MENU": {
+        text: "Press 1 for Tech Help, Press 2 for Representative. Press * to go back.",
+        parent: "MAIN_MENU",
+        options: {
+          "1": "TECH_HELP",
+          "2": "REP_HELP"
+        }
+      },
+      "ORDER_STATUS": {
+        text: "Your order #4582 is out for delivery! Press * to return.",
+        parent: "ORDER_MENU",
+        options: {}
+      },
+      "ORDER_CANCEL": {
+        text: "To cancel, visit our website. Press * to return.",
+        parent: "ORDER_MENU",
+        options: {}
+      },
+      "TECH_HELP": {
+        text: "Tech support is active. Press * to return.",
+        parent: "SUPPORT_MENU",
+        options: {}
+      },
+      "REP_HELP": {
+        text: "Transferring to representative... Press * to return.",
+        parent: "SUPPORT_MENU",
+        options: {}
       }
     };
 
-    // State & Buffer Variables 🚦
     let currentState = "IDLE";
     let activeCustomer = null;
     let currentInput = "";
 
-    // 🔊 Text-To-Speech Function
     function speak(text) {
       if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); // Stop any currently playing audio
+        window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 0.95;
         window.speechSynthesis.speak(utterance);
       }
     }
 
-    // Update Screen & Speak Text 🗣️
     function updateDisplay(text) {
       screenText.textContent = text;
       speak(text);
     }
 
-    // Keypad Click Event Listeners
     keys.forEach(key => {
       key.addEventListener('click', () => {
-        const val = key.textContent;
-        handleKeyPress(val);
+        handleKeyPress(key.textContent);
       });
     });
 
-    // Main Keypress Handling Router 🔀
     function handleKeyPress(val) {
       if (currentState === "CONFIRM_IDENTITY") {
         handleIdentityConfirmation(val);
         return;
       }
 
-      // Default digit buffer handling for IDLE state
+      // Check if currentState is part of the menuTree 🌳
+      if (menuTree[currentState]) {
+        handleMenuNavigation(val);
+        return;
+      }
+
+      // Default keypad typing behavior for IDLE state
       if (val === '*') {
         currentInput = "";
         inputBuffer.textContent = "";
@@ -191,7 +221,6 @@
       }
     }
 
-    // Process Code Submission (# key) 🔍
     function processCodeSubmission(code) {
       const customer = customerDatabase[code];
 
@@ -200,29 +229,41 @@
       } else if (!customer.active) {
         updateDisplay("⚠️ Account Expired. Call support.");
       } else {
-        // Valid user found!
         activeCustomer = customer;
         currentState = "CONFIRM_IDENTITY";
         updateDisplay(`Hello ${activeCustomer.name}! Press 1 for Yes, 2 for No.`);
       }
     }
 
-    // Handle Identity Confirmation (State: CONFIRM_IDENTITY)
     function handleIdentityConfirmation(val) {
       if (val === "1") {
-        // Yes -> Move to Customer Menu
-        currentState = "CUSTOMER_MENU";
-        const menuText = activeCustomer.customPrompt || "Welcome to your account menu.";
-        updateDisplay(menuText);
+        currentState = "MAIN_MENU";
+        updateDisplay(menuTree["MAIN_MENU"].text);
       } else if (val === "2") {
-        // No -> Reset back to IDLE
         resetToIdle("Identity unconfirmed. Resetting system.");
       } else {
         updateDisplay("Invalid selection. Press 1 for Yes, 2 for No.");
       }
     }
 
-    // Reset System to IDLE State 🔄
+    function handleMenuNavigation(val) {
+      const currentMenu = menuTree[currentState];
+
+      if (val === "*") {
+        if (currentMenu.parent) {
+          currentState = currentMenu.parent;
+          updateDisplay(menuTree[currentState].text);
+        } else {
+          resetToIdle("Logged out. Welcome! Enter your code followed by #");
+        }
+      } else if (currentMenu.options[val]) {
+        currentState = currentMenu.options[val];
+        updateDisplay(menuTree[currentState].text);
+      } else {
+        updateDisplay("Invalid option. " + currentMenu.text);
+      }
+    }
+
     function resetToIdle(message) {
       currentState = "IDLE";
       activeCustomer = null;
