@@ -159,12 +159,19 @@
       },
       // ⚡ Dynamic Input Node (Collects 2 digits for month)
       "BOOK_NEW_SCHEDULE": {
-        text: "Enter a 2-digit month (01 for Jan, 05 for May, 12 for Dec). Press * to go back.",
-        parent: "BOOK_SCHEDULE",
-        type: "COLLECT_DIGITS",
-        length: 2,
-        nextState: "SCHEDULE_CONFIRMED"
-      },
+  text: "Enter a 2-digit month (01 for Jan, 05 for May, 12 for Dec). Press * to go back.",
+  parent: "BOOK_SCHEDULE",
+  type: "COLLECT_DIGITS",
+  length: 2,
+  nextState: "SELECT_DAY" // 👈 Points to the day step!
+},
+"SELECT_DAY": {
+  text: "Enter a 2-digit day (01 to 31). Press * to go back.",
+  parent: "BOOK_NEW_SCHEDULE",
+  type: "COLLECT_DIGITS",
+  length: 2,
+  nextState: "SCHEDULE_CONFIRMED" // 👈 Points to confirmation!
+},
       "SCHEDULE_CONFIRMED": {
         text: "Your month selection has been saved! Press * to return.",
         parent: "MAIN_MENU",
@@ -297,30 +304,40 @@
 
       // ⚡ Handle Dynamic Input Collection Mode
       if (currentMenu.type === "COLLECT_DIGITS") {
-        // Collect digit
         if (val >= "0" && val <= "9") {
           currentInput += val;
           inputBuffer.textContent = currentInput;
 
-          // Check if we collected enough digits
           if (currentInput.length === currentMenu.length) {
-            const monthStr = currentInput;
-            const monthName = monthNames[monthStr];
-
-            if (monthName) {
-              // Valid Month! Log & Advance state
-              if (activeCustomer) {
-                activeCustomer.logs.push(`Month: ${monthName}`);
+            // 🗓️ 1. Handling Month Selection
+            if (currentState === "BOOK_NEW_SCHEDULE") {
+              const monthName = monthNames[currentInput];
+              if (monthName) {
+                if (activeCustomer) activeCustomer.logs.push(`Month: ${monthName}`);
+                currentInput = "";
+                inputBuffer.textContent = "";
+                currentState = currentMenu.nextState;
+                updateDisplay(`Selected ${monthName}! ${menuTree[currentState].text}`);
+              } else {
+                currentInput = "";
+                inputBuffer.textContent = "";
+                updateDisplay("❌ Invalid month (01-12). Re-enter 2-digit month.");
               }
-              currentInput = "";
-              inputBuffer.textContent = "";
-              currentState = currentMenu.nextState;
-              updateDisplay(`Selected ${monthName}! ${menuTree[currentState].text}`);
-            } else {
-              // Invalid Month
-              currentInput = "";
-              inputBuffer.textContent = "";
-              updateDisplay("❌ Invalid month (01-12). Re-enter 2-digit month.");
+            } 
+            // 📆 2. Handling Day Selection
+            else if (currentState === "SELECT_DAY") {
+              const dayNum = parseInt(currentInput, 10);
+              if (dayNum >= 1 && dayNum <= 31) {
+                if (activeCustomer) activeCustomer.logs.push(`Day: ${currentInput}`);
+                currentInput = "";
+                inputBuffer.textContent = "";
+                currentState = currentMenu.nextState;
+                updateDisplay(`Day ${currentInput} saved! ${menuTree[currentState].text}`);
+              } else {
+                currentInput = "";
+                inputBuffer.textContent = "";
+                updateDisplay("❌ Invalid day (01-31). Re-enter 2-digit day.");
+              }
             }
           }
         }
