@@ -118,140 +118,66 @@
     const inputBuffer = document.getElementById('input-buffer');
     const keys = document.querySelectorAll('.key');
 
-    // 🗂️ Customer Database (with response logs array)
+    // 🗂️ Customer Database
     const customerDatabase = {
-      "1": { name: "Alex", active: true, logs: [] },
-      "2": { name: "Jordan", active: true, logs: [] }
+      "1": { name: "unknow", active: true, logs: [] },
+      "2": { name: "unknow", active: false, logs: [] }
+    };
+
+    // 🗓️ Month Lookup Table (Replaces 12 individual menu branches)
+    const monthNames = {
+      "01": "January",   "02": "February", "03": "March",
+      "04": "April",     "05": "May",      "06": "June",
+      "07": "July",      "08": "August",   "09": "September",
+      "10": "October",   "11": "November", "12": "December"
     };
 
     // 🌳 Data-Driven Menu Tree Structure
     const menuTree = {
       "MAIN_MENU": {
-        text: "Press 1 for booking schedule, Press 2 for Support.",
+        text: "Press 1 for , Press 2 for Scheduling.",
         parent: null,
         options: {
-          "1": "BOOK_SCHEDULE",
+          "1": "",
+          "2": "BOOK_SCHEDULE"
+        }
+      },
+      "": {
+        text: " Press * to go back.",
+        parent: "MAIN_MENU",
+        options: {
+          "1": "",
           "2": ""
         }
       },
       "BOOK_SCHEDULE": {
-        text: "you have pressed booking schedule. Press 1 for booking a new schedule. Press * to go back.",
+        text: "Press 1 to Book New Schedule. Press * to go back.",
         parent: "MAIN_MENU",
         options: {
           "1": "BOOK_NEW_SCHEDULE"
         }
       },
+      // ⚡ Dynamic Input Node (Collects 2 digits for month)
       "BOOK_NEW_SCHEDULE": {
-        text: "Press the month you would like to book a schedule. If the month is one digit press 0 Press * to go back.",
+        text: "Enter a 2-digit month (01 for Jan, 05 for May, 12 for Dec). Press * to go back.",
         parent: "BOOK_SCHEDULE",
-        options: {
-          "0": "BLANK_MONTH",
-          "1": "MONTH_START_WITH_ONE"
-        }
+        type: "COLLECT_DIGITS",
+        length: 2,
+        nextState: "SCHEDULE_CONFIRMED"
       },
-      "BLANK_MONTH": {
-        text: "You have pressed 0. please enter your second number of the month. Press * to return.",
-        parent: "BOOK_NEW_SCHEDULE",
-        options: {
-            "1": "JAN",
-            "2": "FEB",
-            "3": "MAR",
-            "4": "APR",
-            "5": "MAY",
-            "6": "JUN",
-            "7": "JUL",
-            "8": "AUG",
-            "9": "SEP",
-        }
-      },
-      "JAN": {
-        text: "To cancel, visit our website. Press * to return.",
-        parent: "ORDER_MENU",
-        options: {}
-      },
-      "FEB": {
-        text: "Tech support is active. Press * to return.",
-        parent: "SUPPORT_MENU",
-        options: {}
-      },
-      "MAR": {
-        text: "Transferring to representative... Press * to return.",
-        parent: "SUPPORT_MENU",
-        options: {}
-      },
-      "APR": {
-        text: "Transferring to representative... Press * to return.",
-        parent: "SUPPORT_MENU",
-        options: {}
-      },
-      "MAY": {
-        text: "Transferring to representative... Press * to return.",
-        parent: "SUPPORT_MENU",
-        options: {}
-      },
-      "JUN": {
-        text: "Transferring to representative... Press * to return.",
-        parent: "SUPPORT_MENU",
-        options: {}
-      },
-      "JUL": {
-        text: "Transferring to representative... Press * to return.",
-        parent: "SUPPORT_MENU",
-        options: {}
-      },
-      "AUG": {
-        text: "Transferring to representative... Press * to return.",
-        parent: "SUPPORT_MENU",
-        options: {}
-      },
-      "SEP": {
-        text: "Transferring to representative... Press * to return.",
-        parent: "SUPPORT_MENU",
+      "SCHEDULE_CONFIRMED": {
+        text: "Your month selection has been saved! Press * to return.",
+        parent: "MAIN_MENU",
         options: {}
       },
       "": {
-        text: "Transferring to representative... Press * to return.",
-        parent: "SUPPORT_MENU",
+        text: "",
+        parent: "",
         options: {}
       },
       "": {
-        text: "Transferring to representative... Press * to return.",
-        parent: "SUPPORT_MENU",
-        options: {}
-      },
-      "": {
-        text: "Transferring to representative... Press * to return.",
-        parent: "SUPPORT_MENU",
-        options: {}
-      },
-      "": {
-        text: "Transferring to representative... Press * to return.",
-        parent: "SUPPORT_MENU",
-        options: {}
-      },
-      "": {
-        text: "Transferring to representative... Press * to return.",
-        parent: "SUPPORT_MENU",
-        options: {}
-      },
-      "": {
-        text: "Transferring to representative... Press * to return.",
-        parent: "SUPPORT_MENU",
-        options: {}
-      },
-      "": {
-        text: "Transferring to representative... Press * to return.",
-        parent: "SUPPORT_MENU",
-        options: {}
-      },
-      "": {
-        text: "Transferring to representative... Press * to return.",
-        parent: "SUPPORT_MENU",
-        options: {}
-      },
-      "": {
-        text: "Transferring to representative... Press * to return.",
-        parent: "SUPPORT_MENU",
+        text: "",
+        parent: "",
         options: {}
       }
     };
@@ -270,13 +196,13 @@
       }
     }
 
-    // Update Screen & Speak Text
+    // Update Screen & Speak
     function updateDisplay(text) {
       screenText.textContent = text;
       speak(text);
     }
 
-    // Keypad Event Listeners
+    // Keypad Listeners
     keys.forEach(key => {
       key.addEventListener('click', () => {
         handleKeyPress(key.textContent);
@@ -299,13 +225,13 @@
         return;
       }
 
-      // 3. Customer Navigation State
+      // 3. Customer Menu Navigation & Dynamic Digit Input State
       if (menuTree[currentState]) {
         handleMenuNavigation(val);
         return;
       }
 
-      // 4. Keypad Typing (IDLE State)
+      // 4. Default IDLE State Keypad Typing
       if (val === '*') {
         currentInput = "";
         inputBuffer.textContent = "";
@@ -319,16 +245,14 @@
       }
     }
 
-    // Code Submission Handler (# key)
+    // Code Submission Handler
     function processCodeSubmission(code) {
-      // Check Admin Code
       if (code === "9999") {
         currentState = "ADMIN_MODE";
         showAdminLogs();
         return;
       }
 
-      // Check Customer Code
       const customer = customerDatabase[code];
 
       if (!customer) {
@@ -338,11 +262,11 @@
       } else {
         activeCustomer = customer;
         currentState = "CONFIRM_IDENTITY";
-        updateDisplay(`Hello just to confirm, are you ${activeCustomer.name}? Press 1 for Yes, 2 for No.`);
+        updateDisplay(`Hello ${activeCustomer.name}! Press 1 for Yes, 2 for No.`);
       }
     }
 
-    // Handle Yes (1) / No (2)
+    // Handle Identity Confirmation
     function handleIdentityConfirmation(val) {
       if (val === "1") {
         currentState = "MAIN_MENU";
@@ -354,19 +278,57 @@
       }
     }
 
-    // Handle Sub-Menu Navigation & Logging 📝
+    // Menu Navigation & Dynamic Collector Logic
     function handleMenuNavigation(val) {
       const currentMenu = menuTree[currentState];
 
+      // Handle Back button '*'
       if (val === "*") {
+        currentInput = "";
+        inputBuffer.textContent = "";
         if (currentMenu.parent) {
           currentState = currentMenu.parent;
           updateDisplay(menuTree[currentState].text);
         } else {
           resetToIdle("Logged out. Welcome! Enter your code followed by #");
         }
-      } else if (currentMenu.options[val]) {
-        // Log selection
+        return;
+      }
+
+      // ⚡ Handle Dynamic Input Collection Mode
+      if (currentMenu.type === "COLLECT_DIGITS") {
+        // Collect digit
+        if (val >= "0" && val <= "9") {
+          currentInput += val;
+          inputBuffer.textContent = currentInput;
+
+          // Check if we collected enough digits
+          if (currentInput.length === currentMenu.length) {
+            const monthStr = currentInput;
+            const monthName = monthNames[monthStr];
+
+            if (monthName) {
+              // Valid Month! Log & Advance state
+              if (activeCustomer) {
+                activeCustomer.logs.push(`Month: ${monthName}`);
+              }
+              currentInput = "";
+              inputBuffer.textContent = "";
+              currentState = currentMenu.nextState;
+              updateDisplay(`Selected ${monthName}! ${menuTree[currentState].text}`);
+            } else {
+              // Invalid Month
+              currentInput = "";
+              inputBuffer.textContent = "";
+              updateDisplay("❌ Invalid month (01-12). Re-enter 2-digit month.");
+            }
+          }
+        }
+        return;
+      }
+
+      // Standard Option Navigation
+      if (currentMenu.options && currentMenu.options[val]) {
         if (activeCustomer) {
           activeCustomer.logs.push(val);
         }
@@ -377,7 +339,7 @@
       }
     }
 
-    // Display Admin Logs 📊
+    // Display Admin Logs
     function showAdminLogs() {
       let summary = "📊 CUSTOMER LOGS:\n";
 
