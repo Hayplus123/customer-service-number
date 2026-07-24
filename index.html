@@ -1,195 +1,111 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Automated Phone System</title>
-  <style>
-    /* Centers the entire phone in the middle of the screen */
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      margin: 0;
-      background-color: #f0f2f5;
-      font-family: sans-serif;
+<script>
+  // DOM Elements
+  const screenText = document.getElementById('screen-text');
+  const inputBuffer = document.getElementById('input-buffer');
+  const keys = document.querySelectorAll('.key');
+
+  // Customer Database
+  const customerDatabase = {
+    "1001": {
+      name: "Alex",
+      active: true,
+      customPrompt: "Press 1 for Order Status, Press 2 for Billing."
+    },
+    "1002": {
+      name: "Jordan",
+      active: false,
+      customPrompt: "Press 1 for Account Renewal."
     }
+  };
 
-    /* Main Phone Shell */
-    .phone-container {
-      width: 300px;
-      background-color: #1a1a1a;
-      padding: 25px;
-      border-radius: 25px;
-      box-shadow: 0px 10px 25px rgba(0,0,0,0.3);
+  // State & Buffer Variables
+  let currentState = "IDLE";
+  let activeCustomer = null;
+  let currentInput = "";
+
+  // 🔊 Text-To-Speech Function
+  function speak(text) {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel(); // Stop talking if currently speaking
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.95;
+      window.speechSynthesis.speak(utterance);
     }
+  }
 
-    /* Display Screen Area */
-    #display {
-      background-color: #000;
-      border-radius: 12px;
-      padding: 15px;
-      text-align: center;
-      margin-bottom: 25px;
-      border: 2px solid #333;
-    }
+  // Update Display & Speak Message
+  function updateDisplay(text) {
+    screenText.textContent = text;
+    speak(text);
+  }
 
-    /* System prompts / guidance text */
-    #screen-text {
-      font-size: 0.95rem;
-      color: #00ff66; /* Retro green display text */
-      margin-bottom: 10px;
-      min-height: 2.8em;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      line-height: 1.3;
-    }
-
-    /* Currently typed digits */
-    #input-buffer {
-      font-size: 1.6rem;
-      color: #ffffff;
-      font-weight: bold;
-      letter-spacing: 3px;
-      min-height: 1.4em;
-    }
-
-    /* 3-Column Keypad Layout */
-    .keypad {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr); /* 3 equal columns 📐 */
-      gap: 15px;                            /* Space between buttons */
-    }
-
-    /* Individual Keypad Buttons */
-    .key {
-      width: 65px;
-      height: 65px;
-      border-radius: 50%; /* Circular buttons ⚪ */
-      border: none;
-      background-color: #333;
-      color: white;
-      font-size: 1.4rem;
-      font-weight: bold;
-      cursor: pointer;
-      justify-self: center; /* Center each button in its grid cell */
-      transition: background-color 0.2s, transform 0.1s;
-    }
-
-    /* Hover & Active Press Effects */
-    .key:hover {
-      background-color: #555;
-    }
-
-    .key:active {
-      transform: scale(0.92); /* Press down effect 👆 */
-    }
-
-    /* Helper instruction below keypad */
-    .instructions {
-      color: #888;
-      font-size: 0.75rem;
-      text-align: center;
-      margin-top: 18px;
-    }
-  </style>
-</head>
-<body>
-
-  <div class="phone-container">
-    <!-- Display Screen -->
-    <div id="display">
-      <div id="screen-text">Welcome! Enter your code followed by #</div>
-      <div id="input-buffer"></div>
-    </div>
-
-    <!-- Keypad Grid -->
-    <div class="keypad">
-      <button class="key">1</button>
-      <button class="key">2</button>
-      <button class="key">3</button>
-      <button class="key">4</button>
-      <button class="key">5</button>
-      <button class="key">6</button>
-      <button class="key">7</button>
-      <button class="key">8</button>
-      <button class="key">9</button>
-      <button class="key">*</button>
-      <button class="key">0</button>
-      <button class="key">#</button>
-    </div>
-
-    <div class="instructions">Press * to Clear | Press # to Submit</div>
-  </div>
-
-  <script>
-    // DOM Elements
-    const screenText = document.getElementById('screen-text');
-    const inputBuffer = document.getElementById('input-buffer');
-    const keys = document.querySelectorAll('.key');
-
-    // Buffer to hold current typed numbers
-    let currentInput = "";
-
-    // Attach click listeners to all keypad buttons
-    keys.forEach(key => {
-      key.addEventListener('click', () => {
-        const keyValue = key.textContent;
-        handleKeyPress(keyValue);
-      });
+  // Keypad Click Listeners
+  keys.forEach(key => {
+    key.addEventListener('click', () => {
+      const val = key.textContent;
+      handleKeyPress(val);
     });
+  });
 
-    // Handle keypress logic
-    function handleKeyPress(val) {
-      if (val === '*') {
-        // Clear input buffer on '*'
-        currentInput = "";
-        inputBuffer.textContent = "";
-      } else if (val === '#') {
-        // Submit code on '#'
-        processSubmission(currentInput);
-        currentInput = "";
-        inputBuffer.textContent = "";
-      } else {
-        // Append number digits
-        currentInput += val;
-        inputBuffer.textContent = currentInput;
-      }
+  // Main Keypress Handling
+  function handleKeyPress(val) {
+    // Handling based on currentState
+    if (currentState === "CONFIRM_IDENTITY") {
+      handleIdentityConfirmation(val);
+      return;
     }
 
-    // Temporary logger for Step 1
-    // 1. Our Customer Database Object
-const customerDatabase = {
-  "1001": {
-    name: "Alex",
-    active: true,
-    customPrompt: "Press 1 for Order Status, Press 2 for Billing."
-  },
-  "1002": {
-    name: "Jordan",
-    active: false, // Expired account ⚠️
-    customPrompt: "Press 1 for Account Renewal."
+    // Default digit buffer handling for IDLE state
+    if (val === '*') {
+      currentInput = "";
+      inputBuffer.textContent = "";
+    } else if (val === '#') {
+      processCodeSubmission(currentInput);
+      currentInput = "";
+      inputBuffer.textContent = "";
+    } else {
+      currentInput += val;
+      inputBuffer.textContent = currentInput;
+    }
   }
-};
 
-// 2. Updated Code Validation Logic
-function processSubmission(code) {
-  // Look up the code in our database
-  const customer = customerDatabase[code];
+  // Process Code Submission (# key)
+  function processCodeSubmission(code) {
+    const customer = customerDatabase[code];
 
-  if (!customer) {
-    // Case 1: Code doesn't exist ❌
-    screenText.textContent = "❌ Code Invalid. Please try again.";
-  } else if (!customer.active) {
-    // Case 2: Code exists, but account is expired ⚠️
-    screenText.textContent = "⚠️ Account Expired. Call support.";
-  } else {
-    // Case 3: Valid active customer! ✅
-    screenText.textContent = `Hello ${customer.name}! Press 1 for Yes, 2 for No.`;
+    if (!customer) {
+      updateDisplay("❌ Code Invalid. Please try again.");
+    } else if (!customer.active) {
+      updateDisplay("⚠️ Account Expired. Call support.");
+    } else {
+      // Valid user found!
+      activeCustomer = customer;
+      currentState = "CONFIRM_IDENTITY";
+      updateDisplay(`Hello ${activeCustomer.name}! Press 1 for Yes, 2 for No.`);
+    }
   }
-}
-  </script>
 
-</body>
-</html>
+  // Handle Yes (1) or No (2) during Identity Confirmation
+  function handleIdentityConfirmation(val) {
+    if (val === "1") {
+      // Yes -> Move to Customer Menu
+      currentState = "CUSTOMER_MENU";
+      const menuText = activeCustomer.customPrompt || "Welcome to your account menu.";
+      updateDisplay(menuText);
+    } else if (val === "2") {
+      // No -> Reset back to IDLE
+      resetToIdle("Identity unconfirmed. Resetting system.");
+    } else {
+      updateDisplay("Invalid selection. Press 1 for Yes, 2 for No.");
+    }
+  }
+
+  // Reset System to IDLE
+  function resetToIdle(message) {
+    currentState = "IDLE";
+    activeCustomer = null;
+    currentInput = "";
+    inputBuffer.textContent = "";
+    updateDisplay(message || "Welcome! Enter your code followed by #");
+  }
+</script>
