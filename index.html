@@ -1,111 +1,236 @@
-<script>
-  // DOM Elements
-  const screenText = document.getElementById('screen-text');
-  const inputBuffer = document.getElementById('input-buffer');
-  const keys = document.querySelectorAll('.key');
-
-  // Customer Database
-  const customerDatabase = {
-    "1001": {
-      name: "Alex",
-      active: true,
-      customPrompt: "Press 1 for Order Status, Press 2 for Billing."
-    },
-    "1002": {
-      name: "Jordan",
-      active: false,
-      customPrompt: "Press 1 for Account Renewal."
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Automated Phone System</title>
+  <style>
+    /* Centers the phone on the screen */
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background-color: #f0f2f5;
+      font-family: sans-serif;
     }
-  };
 
-  // State & Buffer Variables
-  let currentState = "IDLE";
-  let activeCustomer = null;
-  let currentInput = "";
-
-  // 🔊 Text-To-Speech Function
-  function speak(text) {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel(); // Stop talking if currently speaking
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.95;
-      window.speechSynthesis.speak(utterance);
+    /* Main Phone Container */
+    .phone-container {
+      width: 300px;
+      background-color: #1a1a1a;
+      padding: 25px;
+      border-radius: 25px;
+      box-shadow: 0px 10px 25px rgba(0,0,0,0.3);
     }
-  }
 
-  // Update Display & Speak Message
-  function updateDisplay(text) {
-    screenText.textContent = text;
-    speak(text);
-  }
+    /* Display Screen Area */
+    #display {
+      background-color: #000;
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+      margin-bottom: 25px;
+      border: 2px solid #333;
+    }
 
-  // Keypad Click Listeners
-  keys.forEach(key => {
-    key.addEventListener('click', () => {
-      const val = key.textContent;
-      handleKeyPress(val);
+    /* System prompt / Green LCD text */
+    #screen-text {
+      font-size: 0.95rem;
+      color: #00ff66;
+      margin-bottom: 10px;
+      min-height: 2.8em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.3;
+    }
+
+    /* Typed digits buffer */
+    #input-buffer {
+      font-size: 1.6rem;
+      color: #ffffff;
+      font-weight: bold;
+      letter-spacing: 3px;
+      min-height: 1.4em;
+    }
+
+    /* 3-Column Keypad Layout */
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+
+    /* Circular Keypad Buttons */
+    .key {
+      width: 65px;
+      height: 65px;
+      border-radius: 50%;
+      border: none;
+      background-color: #333;
+      color: white;
+      font-size: 1.4rem;
+      font-weight: bold;
+      cursor: pointer;
+      justify-self: center;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .key:hover {
+      background-color: #555;
+    }
+
+    .key:active {
+      transform: scale(0.92);
+    }
+
+    .instructions {
+      color: #888;
+      font-size: 0.75rem;
+      text-align: center;
+      margin-top: 18px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="phone-container">
+    <!-- Display Screen -->
+    <div id="display">
+      <div id="screen-text">Welcome! Enter your code followed by #</div>
+      <div id="input-buffer"></div>
+    </div>
+
+    <!-- Keypad Grid -->
+    <div class="keypad">
+      <button class="key">1</button>
+      <button class="key">2</button>
+      <button class="key">3</button>
+      <button class="key">4</button>
+      <button class="key">5</button>
+      <button class="key">6</button>
+      <button class="key">7</button>
+      <button class="key">8</button>
+      <button class="key">9</button>
+      <button class="key">*</button>
+      <button class="key">0</button>
+      <button class="key">#</button>
+    </div>
+
+    <div class="instructions">Press * to Clear | Press # to Submit</div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const screenText = document.getElementById('screen-text');
+    const inputBuffer = document.getElementById('input-buffer');
+    const keys = document.querySelectorAll('.key');
+
+    // Customer Database 🗂️
+    const customerDatabase = {
+      "1001": {
+        name: "Alex",
+        active: true,
+        customPrompt: "Press 1 for Order Status, Press 2 for Billing."
+      },
+      "1002": {
+        name: "Jordan",
+        active: false,
+        customPrompt: "Press 1 for Account Renewal."
+      }
+    };
+
+    // State & Buffer Variables 🚦
+    let currentState = "IDLE";
+    let activeCustomer = null;
+    let currentInput = "";
+
+    // 🔊 Text-To-Speech Function
+    function speak(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // Stop any currently playing audio
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.95;
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    // Update Screen & Speak Text 🗣️
+    function updateDisplay(text) {
+      screenText.textContent = text;
+      speak(text);
+    }
+
+    // Keypad Click Event Listeners
+    keys.forEach(key => {
+      key.addEventListener('click', () => {
+        const val = key.textContent;
+        handleKeyPress(val);
+      });
     });
-  });
 
-  // Main Keypress Handling
-  function handleKeyPress(val) {
-    // Handling based on currentState
-    if (currentState === "CONFIRM_IDENTITY") {
-      handleIdentityConfirmation(val);
-      return;
+    // Main Keypress Handling Router 🔀
+    function handleKeyPress(val) {
+      if (currentState === "CONFIRM_IDENTITY") {
+        handleIdentityConfirmation(val);
+        return;
+      }
+
+      // Default digit buffer handling for IDLE state
+      if (val === '*') {
+        currentInput = "";
+        inputBuffer.textContent = "";
+      } else if (val === '#') {
+        processCodeSubmission(currentInput);
+        currentInput = "";
+        inputBuffer.textContent = "";
+      } else {
+        currentInput += val;
+        inputBuffer.textContent = currentInput;
+      }
     }
 
-    // Default digit buffer handling for IDLE state
-    if (val === '*') {
+    // Process Code Submission (# key) 🔍
+    function processCodeSubmission(code) {
+      const customer = customerDatabase[code];
+
+      if (!customer) {
+        updateDisplay("❌ Code Invalid. Please try again.");
+      } else if (!customer.active) {
+        updateDisplay("⚠️ Account Expired. Call support.");
+      } else {
+        // Valid user found!
+        activeCustomer = customer;
+        currentState = "CONFIRM_IDENTITY";
+        updateDisplay(`Hello ${activeCustomer.name}! Press 1 for Yes, 2 for No.`);
+      }
+    }
+
+    // Handle Identity Confirmation (State: CONFIRM_IDENTITY)
+    function handleIdentityConfirmation(val) {
+      if (val === "1") {
+        // Yes -> Move to Customer Menu
+        currentState = "CUSTOMER_MENU";
+        const menuText = activeCustomer.customPrompt || "Welcome to your account menu.";
+        updateDisplay(menuText);
+      } else if (val === "2") {
+        // No -> Reset back to IDLE
+        resetToIdle("Identity unconfirmed. Resetting system.");
+      } else {
+        updateDisplay("Invalid selection. Press 1 for Yes, 2 for No.");
+      }
+    }
+
+    // Reset System to IDLE State 🔄
+    function resetToIdle(message) {
+      currentState = "IDLE";
+      activeCustomer = null;
       currentInput = "";
       inputBuffer.textContent = "";
-    } else if (val === '#') {
-      processCodeSubmission(currentInput);
-      currentInput = "";
-      inputBuffer.textContent = "";
-    } else {
-      currentInput += val;
-      inputBuffer.textContent = currentInput;
+      updateDisplay(message || "Welcome! Enter your code followed by #");
     }
-  }
+  </script>
 
-  // Process Code Submission (# key)
-  function processCodeSubmission(code) {
-    const customer = customerDatabase[code];
-
-    if (!customer) {
-      updateDisplay("❌ Code Invalid. Please try again.");
-    } else if (!customer.active) {
-      updateDisplay("⚠️ Account Expired. Call support.");
-    } else {
-      // Valid user found!
-      activeCustomer = customer;
-      currentState = "CONFIRM_IDENTITY";
-      updateDisplay(`Hello ${activeCustomer.name}! Press 1 for Yes, 2 for No.`);
-    }
-  }
-
-  // Handle Yes (1) or No (2) during Identity Confirmation
-  function handleIdentityConfirmation(val) {
-    if (val === "1") {
-      // Yes -> Move to Customer Menu
-      currentState = "CUSTOMER_MENU";
-      const menuText = activeCustomer.customPrompt || "Welcome to your account menu.";
-      updateDisplay(menuText);
-    } else if (val === "2") {
-      // No -> Reset back to IDLE
-      resetToIdle("Identity unconfirmed. Resetting system.");
-    } else {
-      updateDisplay("Invalid selection. Press 1 for Yes, 2 for No.");
-    }
-  }
-
-  // Reset System to IDLE
-  function resetToIdle(message) {
-    currentState = "IDLE";
-    activeCustomer = null;
-    currentInput = "";
-    inputBuffer.textContent = "";
-    updateDisplay(message || "Welcome! Enter your code followed by #");
-  }
-</script>
+</body>
+</html>
