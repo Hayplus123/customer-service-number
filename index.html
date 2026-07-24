@@ -99,7 +99,7 @@
 </head>
 <body>
 
-    <div class="version-tag">ver 1.3</div>
+    <div class="version-tag">ver 1.4</div>
   <div class="phone-container">
     <div id="display">
       <div id="screen-text">Welcome! Enter your code followed by #</div>
@@ -197,9 +197,7 @@
         parent: "MAIN_MENU",
         type: "COLLECT_DIGITS",
         length: 4,
-        options: {
-          "2938": "GAME_MODE"
-        }
+        nextState: "SCHEDULE_CONFIRMED"
       },
       "GAME_MODE": {
         text: "you have entered spi*ita* mode",
