@@ -159,13 +159,36 @@
     }
 
     // Temporary logger for Step 1
-    function processSubmission(code) {
-      if (code.trim() === "") {
-        screenText.textContent = "Please enter a code first!";
-      } else {
-        screenText.textContent = "Entered code: " + code;
-      }
-    }
+    // 1. Our Customer Database Object
+const customerDatabase = {
+  "1001": {
+    name: "Alex",
+    active: true,
+    customPrompt: "Press 1 for Order Status, Press 2 for Billing."
+  },
+  "1002": {
+    name: "Jordan",
+    active: false, // Expired account ⚠️
+    customPrompt: "Press 1 for Account Renewal."
+  }
+};
+
+// 2. Updated Code Validation Logic
+function processSubmission(code) {
+  // Look up the code in our database
+  const customer = customerDatabase[code];
+
+  if (!customer) {
+    // Case 1: Code doesn't exist ❌
+    screenText.textContent = "❌ Code Invalid. Please try again.";
+  } else if (!customer.active) {
+    // Case 2: Code exists, but account is expired ⚠️
+    screenText.textContent = "⚠️ Account Expired. Call support.";
+  } else {
+    // Case 3: Valid active customer! ✅
+    screenText.textContent = `Hello ${customer.name}! Press 1 for Yes, 2 for No.`;
+  }
+}
   </script>
 
 </body>
