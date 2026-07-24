@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Automated Phone System</title>
   <style>
-    /* Centers the entire phone in the middle of your screen */
+    /* Centers the entire phone in the middle of the screen */
     body {
       display: flex;
       justify-content: center;
@@ -17,23 +17,42 @@
 
     /* Main Phone Shell */
     .phone-container {
-      width: 280px;
+      width: 300px;
       background-color: #1a1a1a;
-      padding: 20px;
+      padding: 25px;
       border-radius: 25px;
       box-shadow: 0px 10px 25px rgba(0,0,0,0.3);
     }
 
-    /* Display Screen at the top */
+    /* Display Screen Area */
     #display {
       background-color: #000;
-      color: #00ff66; /* Retro green screen text */
-      font-size: 1.2rem;
+      border-radius: 12px;
       padding: 15px;
-      border-radius: 10px;
       text-align: center;
-      margin-bottom: 20px;
-      min-height: 24px;
+      margin-bottom: 25px;
+      border: 2px solid #333;
+    }
+
+    /* System prompts / guidance text */
+    #screen-text {
+      font-size: 0.95rem;
+      color: #00ff66; /* Retro green display text */
+      margin-bottom: 10px;
+      min-height: 2.8em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.3;
+    }
+
+    /* Currently typed digits */
+    #input-buffer {
+      font-size: 1.6rem;
+      color: #ffffff;
+      font-weight: bold;
+      letter-spacing: 3px;
+      min-height: 1.4em;
     }
 
     /* 3-Column Keypad Layout */
@@ -45,36 +64,47 @@
 
     /* Individual Keypad Buttons */
     .key {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%; /* Makes them circular ⚪ */
+      width: 65px;
+      height: 65px;
+      border-radius: 50%; /* Circular buttons ⚪ */
       border: none;
       background-color: #333;
       color: white;
       font-size: 1.4rem;
       font-weight: bold;
       cursor: pointer;
-      justify-self: center; /* Centers each button inside its grid cell */
+      justify-self: center; /* Center each button in its grid cell */
       transition: background-color 0.2s, transform 0.1s;
     }
 
-    /* Hover & Active Effects */
+    /* Hover & Active Press Effects */
     .key:hover {
       background-color: #555;
     }
 
     .key:active {
-      transform: scale(0.95); /* Slight press down effect when clicked 👆 */
+      transform: scale(0.92); /* Press down effect 👆 */
+    }
+
+    /* Helper instruction below keypad */
+    .instructions {
+      color: #888;
+      font-size: 0.75rem;
+      text-align: center;
+      margin-top: 18px;
     }
   </style>
 </head>
 <body>
 
   <div class="phone-container">
-    <!-- 1. Display Screen -->
-    <div id="display">Press a key...</div>
+    <!-- Display Screen -->
+    <div id="display">
+      <div id="screen-text">Welcome! Enter your code followed by #</div>
+      <div id="input-buffer"></div>
+    </div>
 
-    <!-- 2. Keypad Area -->
+    <!-- Keypad Grid -->
     <div class="keypad">
       <button class="key">1</button>
       <button class="key">2</button>
@@ -89,7 +119,54 @@
       <button class="key">0</button>
       <button class="key">#</button>
     </div>
+
+    <div class="instructions">Press * to Clear | Press # to Submit</div>
   </div>
+
+  <script>
+    // DOM Elements
+    const screenText = document.getElementById('screen-text');
+    const inputBuffer = document.getElementById('input-buffer');
+    const keys = document.querySelectorAll('.key');
+
+    // Buffer to hold current typed numbers
+    let currentInput = "";
+
+    // Attach click listeners to all keypad buttons
+    keys.forEach(key => {
+      key.addEventListener('click', () => {
+        const keyValue = key.textContent;
+        handleKeyPress(keyValue);
+      });
+    });
+
+    // Handle keypress logic
+    function handleKeyPress(val) {
+      if (val === '*') {
+        // Clear input buffer on '*'
+        currentInput = "";
+        inputBuffer.textContent = "";
+      } else if (val === '#') {
+        // Submit code on '#'
+        processSubmission(currentInput);
+        currentInput = "";
+        inputBuffer.textContent = "";
+      } else {
+        // Append number digits
+        currentInput += val;
+        inputBuffer.textContent = currentInput;
+      }
+    }
+
+    // Temporary logger for Step 1
+    function processSubmission(code) {
+      if (code.trim() === "") {
+        screenText.textContent = "Please enter a code first!";
+      } else {
+        screenText.textContent = "Entered code: " + code;
+      }
+    }
+  </script>
 
 </body>
 </html>
