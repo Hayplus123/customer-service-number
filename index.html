@@ -124,12 +124,20 @@
       "2": { name: "testing_person 2", active: false, logs: [] }
     };
 
-    // 🗓️ Month Lookup Table (Replaces 12 individual menu branches)
-    const monthNames = {
-      "01": "January",   "02": "February", "03": "March",
-      "04": "April",     "05": "May",      "06": "June",
-      "07": "July",      "08": "August",   "09": "September",
-      "10": "October",   "11": "November", "12": "December"
+    // 🗓️ Month Info Map with Max Days per Month
+    const monthInfo = {
+      "01": { name: "January", maxDays: 31 },
+      "02": { name: "February", maxDays: 28 },
+      "03": { name: "March", maxDays: 31 },
+      "04": { name: "April", maxDays: 30 },
+      "05": { name: "May", maxDays: 31 },
+      "06": { name: "June", maxDays: 30 },
+      "07": { name: "July", maxDays: 31 },
+      "08": { name: "August", maxDays: 31 },
+      "09": { name: "September", maxDays: 30 },
+      "10": { name: "October", maxDays: 31 },
+      "11": { name: "November", maxDays: 30 },
+      "12": { name: "December", maxDays: 31 }
     };
 
     // 🌳 Data-Driven Menu Tree Structure
