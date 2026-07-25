@@ -104,7 +104,7 @@
 </head>
 <body>
 
-  <div class="version-tag">ver 1.30</div>
+  <div class="version-tag">ver 1.31</div>
   <div class="phone-container">
     <div id="display">
       <div id="screen-text">Welcome! Enter your code followed by #</div>
@@ -288,16 +288,23 @@
 
     function speak(text) {
 
-      if ('speechSynthesis' in window) {
+      function speak(text) {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // 🔍 Find a standard English voice
+    const voices = window.speechSynthesis.getVoices();
+    const defaultVoice = voices.find(voice => voice.lang.includes('en'));
+    if (defaultVoice) {
+      utterance.voice = defaultVoice;
+    }
 
-        window.speechSynthesis.cancel();
-
-        const utterance = new SpeechSynthesisUtterance(text);
-
-        utterance.rate = 0.95;
-
-        window.speechSynthesis.speak(utterance); 
-      }
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    window.speechSynthesis.speak(utterance);
+  }
+}
     } 
 
     function typeText(text, callback) {
