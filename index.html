@@ -104,7 +104,7 @@ text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
 </head>
 <body>
 
-    <div class="version-tag">ver 1.18</div>
+    <div class="version-tag">ver 1.19</div>
   <div class="phone-container">
     <div id="display">
       <div id="screen-text">Welcome! Enter your code followed by #</div>
@@ -392,7 +392,18 @@ function updateDisplay(text) {
 });
 
     // Main Router
-    function handleKeyPress(val) {
+      function handleKeyPress(val) {
+  // 🟢 1. Check if the current screen requires text typing
+  if (menuTree[currentState] && menuTree[currentState].inputRequired) {
+    if (val === "#") {
+      handleInputSubmit(hiddenInput.value); // 🚀 Submit the typed text!
+      hiddenInput.value = "";              // Clear input
+      hiddenInput.blur();                 // Hide mobile keyboard
+    }
+    return; // Stop standard menu navigation from running
+  }
+
+  // 2. Admin State ...
       // 1. Admin State (View & Delete Customer Data)
       if (currentState === "ADMIN_MODE") {
         if (val === "*") {
