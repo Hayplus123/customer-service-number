@@ -104,13 +104,13 @@ text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
 </head>
 <body>
 
-    <div class="version-tag">ver 1.15</div>
+    <div class="version-tag">ver 1.16</div>
   <div class="phone-container">
     <div id="display">
       <div id="screen-text">Welcome! Enter your code followed by #</div>
       <div id="input-buffer"></div>
     </div>
-
+    <input type="text" id="hidden-input" style="opacity: 0; position: absolute; pointer-events: none;" />
     <div class="keypad">
       <button class="key">1</button>
       <button class="key">2</button>
@@ -279,21 +279,63 @@ text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
         utterance.rate = 0.95;
         window.speechSynthesis.speak(utterance);
       }
-    }
+    } 
 
-    // 🟢 Update Screen & Speak Function
-  function updateDisplay(text) {
-    screenText.textContent = text;
+    let typingInterval;
 
-    // 🟢 Toggle Matrix effect based on menu property
-    if (menuTree[currentState] && menuTree[currentState].matrixVibe) {
-      screenText.classList.add("matrix-vibe");
+function typeText(text, callback) {
+  // Clear any active typing animation
+  clearInterval(typingInterval);
+  screenText.textContent = "";
+
+  let index = 0;
+  typingInterval = setInterval(() => {
+    if (index < text.length) {
+      screenText.textContent += text.charAt(index);
+      index++;
     } else {
-      screenText.classList.remove("matrix-vibe"); // Reset to standard text
+      clearInterval(typingInterval);
+      if (callback) callback(); // Run speech or callback after typing finishes
     }
+  }, 50); // ⏱️ Speed in milliseconds per letter (lower = faster)
+}
 
+function handleInputSubmit(inputText) {
+  const currentMenu = menuTree[currentState];
+
+  // If the current screen has a nextState defined, go there!
+  if (currentMenu && currentMenu.nextState) {
+    currentState = currentMenu.nextState;
+    updateDisplay(menuTree[currentState].text);
+  }
+}
+
+    const hiddenInput = document.getElementById("hidden-input");
+
+function updateDisplay(text) {
+  // 1. Matrix Glow Effect
+  if (menuTree[currentState] && menuTree[currentState].matrixVibe) {
+    screenText.classList.add("matrix-vibe");
+  } else {
+    screenText.classList.remove("matrix-vibe");
+  }
+
+  // 2. Text Display & Speech
+  if (menuTree[currentState] && menuTree[currentState].typing) {
+    typeText(text, () => speak(text));
+  } else {
+    clearInterval(typingInterval);
+    screenText.textContent = text;
     speak(text);
   }
+
+  // 3. Trigger Keyboard for Mobile 📱
+  if (menuTree[currentState] && menuTree[currentState].inputRequired) {
+    hiddenInput.focus(); // Pops up mobile keyboard
+  } else {
+    hiddenInput.blur();  // Hides mobile keyboard
+  }
+}
 
     // Keypad Listeners
     keys.forEach(key => {
