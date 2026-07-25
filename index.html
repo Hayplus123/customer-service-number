@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Automated Phone System</title>
+  <style>
+    /* 🟢 Matrix Gradient Effect */
+    .matrix-vibe {
+      color: #00ff66;
+      text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
+    }
+
+    .version-tag {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      font-family: sans-serif;
+      font-size: 12px;
+      color: #555;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background-color: #f0f2f5;
+      font-family: sans-serif;
+    }
+
+    .phone-container {
+      width: 320px;
+      background-color: #1a1a1a;
+      padding: 25px;
+      border-radius: 25px;
+      box-shadow: 0px 10px 25px rgba(0,0,0,0.3);
+    }
+
+    #display {
+      background-color: #000;
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+      margin-bottom: 25px;
+      border: 2px solid #333;
+    }
+
+    #screen-text {
+      font-size: 0.95rem;
+      color: #00ff66;
+      margin-bottom: 10px;
+      min-height: 3.5em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.3;
+      white-space: pre-line;
+    }
+
+    #input-buffer {
+      font-size: 1.6rem;
+      color: #ffffff;
+      font-weight: bold;
+      letter-spacing: 3px;
+      min-height: 1.4em;
+    }
+
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+
+    .key {
+      width: 65px;
+      height: 65px;
+      border-radius: 50%;
+      border: none;
+      background-color: #333;
+      color: white;
+      font-size: 1.4rem;
+      font-weight: bold;
+      cursor: pointer;
+      justify-self: center;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .key:hover {
+      background-color: #555;
+    }
+
+    .key:active {
+      transform: scale(0.92);
+    }
+
+    .instructions {
+      color: #888;
+      font-size: 0.75rem;
+      text-align: center;
+      margin-top: 18px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="version-tag">ver 1.36</div>
+  <div class="phone-container">
+    <div id="display">
+      <div id="screen-text">Welcome! Enter your code followed by #</div>
+      <div id="input-buffer"></div>
+    </div>
+    <input type="text" id="hidden-input" style="opacity: 0; position: absolute; pointer-events: none;" />
+    <div class="keypad">
+      <button class="key">1</button>
+      <button class="key">2</button>
+      <button class="key">3</button>
+      <button class="key">4</button>
+      <button class="key">5</button>
+      <button class="key">6</button>
+      <button class="key">7</button>
+      <button class="key">8</button>
+      <button class="key">9</button>
+      <button class="key">*</button>
+      <button class="key">0</button>
+      <button class="key">#</button>
+    </div>
+
+    <div class="instructions">Press * to Clear / Back | Press # to Submit</div>
+  </div>
+
+  <script>
+    const screenText = document.getElementById('screen-text');
+    const inputBuffer = document.getElementById('input-buffer');
+    const keys = document.querySelectorAll('.key');
+    const hiddenInput = document.getElementById("hidden-input");
+
+    // 🗂️ Customer Database
+    const customerDatabase = {
+      "01": { name: "Test person", active: true, logs: [] },
+      "02": { name: "Esther", active: true, logs: [] },
+      "03": { name: "Alvin", active: true, logs: [] },
+      "04": { name: "no account", active: false, logs: [] },
+      "05": { name: "no account", active: false, logs: [] },
+      "06": { name: "no account", active: false, logs: [] },
+      "07": { name: "no account", active: false, logs: [] },
+      "08": { name: "no account", active: false, logs: [] },
+      "09": { name: "no account", active: false, logs: [] },
+      "10": { name: "no account", active: false, logs: [] },
+      "11": { name: "no account", active: false, logs: [] },
+      "12": { name: "no account", active: false, logs: [] },
+      "13": { name: "no account", active: false, logs: [] },
+      "14": { name: "no account", active: false, logs: [] },
+      "15": { name: "no account", active: false, logs: [] },
+      "16": { name: "no account", active: false, logs: [] },
+      "17": { name: "no account", active: false, logs: [] },
+
+    };
+
+    // 🗓️ Month Info Map
+    const monthInfo = {
+      "01": { name: "January", maxDays: 31 },
+      "02": { name: "February", maxDays: 28 },
+      "03": { name: "March", maxDays: 31 },
+      "04": { name: "April", maxDays: 30 },
+      "05": { name: "May", maxDays: 31 },
+      "06": { name: "June", maxDays: 30 },
+      "07": { name: "July", maxDays: 31 },
+      "08": { name: "August", maxDays: 31 },
+      "09": { name: "September", maxDays: 30 },
+      "10": { name: "October", maxDays: 31 },
+      "11": { name: "November", maxDays: 30 },
+      "12": { name: "December", maxDays: 31 }
+    };
+
+    // 🌳 Menu Tree Structure
+    const menuTree = {
+      "MAIN_MENU": {
+        text: "Press 1 for Scheduling, Press 2 for entering a special code.",
+        parent: null,
+        options: {
+          "1": "BOOK_SCHEDULE",
+          "2": "SPECIAL_CODE"
+        }
+      },
+      "BOOK_SCHEDULE": {
+        text: "Press 1 to Book New Schedule. Press * to go back.",
+        parent: "MAIN_MENU",
+        options: {
+          "1": "BOOK_NEW_SCHEDULE"
+        }
+      },
+      "BOOK_NEW_SCHEDULE": {
+        text: "Enter a 2-digit month (01 for Jan, 05 for May, 12 for Dec). Press * to go back.",
+        parent: "BOOK_SCHEDULE",
+        type: "COLLECT_DIGITS",
+        length: 2,
+        nextState: "SELECT_DAY"
+      },
+      "SELECT_DAY": {
+        text: "Enter a 2-digit day. Press * to go back.",
+        parent: "BOOK_NEW_SCHEDULE",
+        type: "COLLECT_DIGITS",
+        length: 2,
+        nextState: "SCHEDULE_CONFIRMED"
+      },
+      "SCHEDULE_CONFIRMED": {
+        text: "Your schedule has been confirmed! Press * to return.",
+        parent: "MAIN_MENU",
+        options: {}
+      },
+      "SPECIAL_CODE": {
+        text: "Please enter your 4 digit code",
+        parent: "MAIN_MENU",
+        type: "COLLECT_DIGITS",
+        length: 4,
+        nextState: "SPECIAL_CODE"
+      },
+      "GAME_MODE": {
+        text: "do you acknowlage you have entered spi*ital* mode? press 1 for yes. press 2 for no. Press * to return.",
+        parent: "SPECIAL_CODE",
+        options: {
+          "1": "SPI*ITA*_MODE",
+          "2": "BACK_OUT"
+        }
+      },
+      "BACK_OUT": {
+        text: "you have backed out of your option. press 1 to go to menu. press 2 to book a schedule. press 3 to enter a code.",
+        parent: "MAIN_MENU",
+        options: {
+          "1": "MAIN_MENU",
+          "2": "BOOK_SCHEDULE",
+          "3": "SPECIAL_CODE"
+        }
+      },
+      "SPI*ITA*_MODE": {
+        text: "You have entered into Spi*ital mode. For opening sheild press 1. for asking thing, press 2. for help in battle, press 3. for help, press 4. for things that are none of above, press 5.",
+        matrixVibe: true,
+        parent: "GAME_MODE",
+        options: {
+          "1": "OPENING_SHIELD",
+          "2": "AKSING_THINGS",
+          "3": "HELP_IN_BATTLE",
+          "4": "HELP",
+          "5": "NONE_OF_ABOVE"
+        }
+      },
+      "OPENING_SHIELD": {
+        text: "Please enter all your details below",
+        parent: "SPI*ITA*_MODE",
+        matrixVibe: true,
+        typing: true,
+        inputRequired: true,
+        nextState: "CONFIRMATION_SCREEN"
+      },
+      "AKSING_THINGS": {
+        text: "What would you like to ask?",
+        parent: "SPI*ITA*_MODE",
+        matrixVibe: true,
+        typing: true,
+        inputRequired: true,
+        nextState: "CONFIRMATION_SCREEN"
+      },
+      "HELP_IN_BATTLE": {
+        text: "What do you need help for?",
+        parent: "SPI*ITA*_MODE",
+        matrixVibe: true,
+        typing: true,
+        inputRequired: true,
+        nextState: "CONFIRMATION_SCREEN"
+      },
+      "HELP": {
+        text: "What do you need help for?",
+        parent: "SPI*ITA*_MODE",
+        matrixVibe: true,
+        typing: true,
+        inputRequired: true,
+        nextState: "CONFIRMATION_SCREEN"
+      },
+      "NONE_OF_ABOVE": {
+        text: "Please tell me your problem.",
+        parent: "SPI*ITA*_MODE",
+        matrixVibe: true,
+        typing: true,
+        inputRequired: true,
+        nextState: "CONFIRMATION_SCREEN"
+      },
+      "CONFIRMATION_SCREEN": {
+        text: "Thank you for contacting us, we will reply to you shortly. Press * to go back",
+        parent: "MAIN_MENU",
+        options: {
+          "*": "MAIN_MENU"
+        }
+      }
+    };
+
+    let currentState = "IDLE";
+    let activeCustomer = null;
+    let currentInput = "";
+    let selectedMonthKey = "";
+    let typingInterval;
+
+     // 🔊 Text-To-Speech
+
+      // 🔊 Text-To-Speech (Set to Samantha)
+function speak(text) {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    const voices = window.speechSynthesis.getVoices();
+
+    if (voices.length > 0) {
+      // 🔍 1. Look specifically for "Samantha"
+      const samantha = voices.find(v => v.name.includes('Samantha'));
+      
+      // 🔍 2. If Samantha isn't on this device, fall back to any English voice
+      const fallbackEnglish = voices.find(v => v.lang.startsWith('en'));
+
+      if (samantha) {
+        utterance.voice = samantha;
+      } else if (fallbackEnglish) {
+        utterance.voice = fallbackEnglish;
+      }
+    }
+
+    utterance.rate = 1.0;  // Standard speed
+    utterance.pitch = 1.0; // Standard pitch
+
+    window.speechSynthesis.speak(utterance);
+  }
+}
+
+    function typeText(text, callback) {
+      clearInterval(typingInterval);
+      screenText.textContent = "";
+
+      let index = 0;
+      typingInterval = setInterval(() => {
+        if (index < text.length) {
+          screenText.textContent += text.charAt(index);
+          index++;
+        } else {
+          clearInterval(typingInterval);
+          if (callback) callback();
+        }
+      }, 50);
+    }
+
+    function handleInputSubmit(inputText) {
+      const currentMenu = menuTree[currentState];
+      if (currentMenu && currentMenu.nextState) {
+        currentState = currentMenu.nextState;
+        updateDisplay(menuTree[currentState].text);
+      }
+    }
+
+    function updateDisplay(text) {
+      // 1. Matrix Glow Effect
+      if (menuTree[currentState] && menuTree[currentState].matrixVibe) {
+        screenText.classList.add("matrix-vibe");
+      } else {
+        screenText.classList.remove("matrix-vibe");
+      }
+
+      // 2. Text Display & Speech
+      if (menuTree[currentState] && menuTree[currentState].typing) {
+        typeText(text, () => speak(text));
+      } else {
+        clearInterval(typingInterval);
+        screenText.textContent = text;
+        speak(text);
+      }
+
+      // 3. Trigger Keyboard for Mobile
+      if (menuTree[currentState] && menuTree[currentState].inputRequired) {
+        hiddenInput.focus();
+      } else {
+        hiddenInput.blur();
+      }
+    }
+
+    // 🔀 Main Router Function
+    function handleKeyPress(val) {
+      // 🟢 1. Check for typing screen input FIRST
+      if (menuTree[currentState]?.inputRequired) {
+        if (val === "#") {
+          handleInputSubmit(hiddenInput.value);
+          hiddenInput.value = "";
+          hiddenInput.blur();
+        }
+        return; // Stops here so it doesn't trigger standard menu buttons
+      }
+      function handleInputSubmit(inputText) {
+      const currentMenu = menuTree[currentState];
+
+      // 💾 Save the typed text to the active customer's log history!
+      if (activeCustomer && inputText.trim() !== "") {
+        activeCustomer.logs.push(`Typed: "${inputText.trim()}"`);
+      }
+
+      // Go to the next screen defined in menuTree
+      if (currentMenu && currentMenu.nextState) {
+        currentState = currentMenu.nextState;
+        updateDisplay(menuTree[currentState].text);
+      }
+    }
+
+      // 🟢 2. Admin State
+      if (currentState === "ADMIN_MODE") {
+        if (val === "*") {
+          currentInput = "";
+          inputBuffer.textContent = "";
+          resetToIdle("Logged out of Admin Mode.");
+        } else if (val === "#") {
+          if (customerDatabase[currentInput]) {
+            customerDatabase[currentInput].logs = [];
+            updateDisplay(`Cleared logs for ID ${currentInput}!`);
+          } else {
+            updateDisplay(`ID ${currentInput} not found.`);
+          }
+          currentInput = "";
+          inputBuffer.textContent = "";
+          setTimeout(showAdminLogs, 1500);
+        } else {
+          currentInput += val;
+          inputBuffer.textContent = currentInput;
+        }
+        return;
+      }
+
+      // 🟢 3. Identity Confirmation State
+      if (currentState === "CONFIRM_IDENTITY") {
+        handleIdentityConfirmation(val);
+        return;
+      }
+
+      // 🟢 4. Menu Navigation & Dynamic Collector Logic
+      if (menuTree[currentState]) {
+        handleMenuNavigation(val);
+        return;
+      }
+
+      // 🟢 5. Default IDLE State Keypad Typing
+      if (val === '*') {
+        currentInput = "";
+        inputBuffer.textContent = "";
+      } else if (val === '#') {
+        processCodeSubmission(currentInput);
+        currentInput = "";
+        inputBuffer.textContent = "";
+      } else {
+        currentInput += val;
+        inputBuffer.textContent = currentInput;
+      }
+    }
+
+    // Code Submission Handler
+    function processCodeSubmission(code) {
+      if (code === "1835") {
+        currentState = "ADMIN_MODE";
+        showAdminLogs();
+        return;
+      }
+
+      const customer = customerDatabase[code];
+
+      if (!customer) {
+        updateDisplay("❌ Code Invalid. Please try again.");
+      } else if (!customer.active) {
+        updateDisplay("⚠️ Account Expired. Call support.");
+      } else {
+        activeCustomer = customer;
+        currentState = "CONFIRM_IDENTITY";
+        updateDisplay(`Hello, are you ${activeCustomer.name}? Press 1 for Yes, 2 for No.`);
+      }
+    }
+
+    // Handle Identity Confirmation
+    function handleIdentityConfirmation(val) {
+      if (val === "1") {
+        currentState = "MAIN_MENU";
+        updateDisplay(menuTree["MAIN_MENU"].text);
+      } else if (val === "2") {
+        resetToIdle("Identity unconfirmed. Resetting system.");
+      } else {
+        updateDisplay("Invalid selection. Press 1 for Yes, 2 for No.");
+      }
+    }
+
+    // Menu Navigation & Dynamic Collector Logic
+    function handleMenuNavigation(val) {
+      const currentMenu = menuTree[currentState];
+
+      // Handle Back button '*'
+      if (val === "*") {
+        currentInput = "";
+        inputBuffer.textContent = "";
+        if (currentMenu.parent) {
+          currentState = currentMenu.parent;
+          updateDisplay(menuTree[currentState].text);
+        } else {
+          resetToIdle("Logged out. Welcome! Enter your code followed by #");
+        }
+        return;
+      }
+
+      // Dynamic Input Collection Mode
+      if (currentMenu.type === "COLLECT_DIGITS") {
+        if (val >= "0" && val <= "9") {
+          currentInput += val;
+          inputBuffer.textContent = currentInput;
+
+          if (currentInput.length === currentMenu.length) {
+            // Month Selection
+            if (currentState === "BOOK_NEW_SCHEDULE") {
+              const selectedData = monthInfo[currentInput];
+              if (selectedData) {
+                selectedMonthKey = currentInput;
+                if (activeCustomer) activeCustomer.logs.push(`Month: ${selectedData.name}`);
+                currentInput = "";
+                inputBuffer.textContent = "";
+                currentState = currentMenu.nextState;
+                updateDisplay(`Selected ${selectedData.name}! ${menuTree[currentState].text}`);
+              } else {
+                currentInput = "";
+                inputBuffer.textContent = "";
+                updateDisplay("❌ Invalid month (01-12). Re-enter 2-digit month.");
+              }
+            } 
+            // Day Selection
+            else if (currentState === "SELECT_DAY") {
+              const dayNum = parseInt(currentInput, 10);
+              const maxAllowedDays = monthInfo[selectedMonthKey]?.maxDays || 31;
+
+              if (dayNum >= 1 && dayNum <= maxAllowedDays) {
+                if (activeCustomer) activeCustomer.logs.push(`Day: ${currentInput}`);
+                currentInput = "";
+                inputBuffer.textContent = "";
+                currentState = currentMenu.nextState;
+                updateDisplay(`Day ${currentInput} saved! ${menuTree[currentState].text}`);
+              } else {
+                const monthName = monthInfo[selectedMonthKey]?.name || "this month";
+                currentInput = "";
+                inputBuffer.textContent = "";
+                updateDisplay(`❌ Invalid day. ${monthName} only has ${maxAllowedDays} days.`);
+              }
+            }
+            // 4-Digit Special Code
+            else if (currentState === "SPECIAL_CODE") {
+              if (currentInput === "2983") {
+                updateDisplay("✅ Access Granted! Redirecting. do you acknowlage you have entered spi*ital* mode? press 1 for yes. press 2 for no.");
+                currentState = "GAME_MODE";
+              } else {
+                updateDisplay("❌ Incorrect Code. Try again.");
+              }
+              currentInput = "";
+              inputBuffer.textContent = "";
+            }
+          }
+        }
+        return;
+      }
+
+      // Standard Option Navigation
+      if (currentMenu.options && currentMenu.options[val]) {
+        if (activeCustomer) {
+          activeCustomer.logs.push(val);
+        }
+        currentState = currentMenu.options[val];
+        updateDisplay(menuTree[currentState].text);
+      } else {
+        updateDisplay("Invalid option. " + currentMenu.text);
+      }
+    }
+
+    // Display Admin Logs
+    function showAdminLogs() {
+      let summary = "📊 CUSTOMER LOGS:\n";
+      for (let id in customerDatabase) {
+        const cust = customerDatabase[id];
+        const logHistory = cust.logs.length > 0 ? cust.logs.join(" > ") : "No activity";
+        summary += `${cust.name} (${id}): [${logHistory}]\n`;
+      }
+      summary += "\nType ID + # to clear logs. Press * to exit.";
+      updateDisplay(summary);
+    }
+
+    // Reset System
+    function resetToIdle(message) {
+      currentState = "IDLE";
+      activeCustomer = null;
+      currentInput = "";
+      selectedMonthKey = "";
+      inputBuffer.textContent = "";
+      updateDisplay(message || "Welcome! Enter your code followed by #");
+    }
+
+    // 🎧 Event Listeners
+    keys.forEach(key => {
+      key.addEventListener('click', () => {
+        handleKeyPress(key.textContent.trim());
+      });
+    });
+
+    hiddenInput.addEventListener("input", () => {
+      const currentPrompt = menuTree[currentState]?.text || "";
+      screenText.textContent = `${currentPrompt} ${hiddenInput.value}`;
+
+      if (hiddenInput.value.endsWith("#")) {
+        const submittedText = hiddenInput.value.slice(0, -1);
+        handleInputSubmit(submittedText);
+        hiddenInput.value = "";
+        hiddenInput.blur();
+      }
+    });
+  </script>
+
+</body>
+</html>
