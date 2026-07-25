@@ -205,7 +205,7 @@ text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
         nextState: "SPECIAL_CODE"
       },
       "GAME_MODE": {
-        text: "do you acknolage you have entered spi*ital* mode? press 1 for yes. press 2 for no. Press * to return.",
+        text: "do you acknowlage you have entered spi*ital* mode? press 1 for yes. press 2 for no. Press * to return.",
         parent: "SPECIAL_CODE",
         options: {
           "1": "SPI*ITA*_MODE",
@@ -451,7 +451,7 @@ text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
             // 🔒 3. Handling 4-Digit Special Code
             else if (currentState === "SPECIAL_CODE") {
               if (currentInput === "2983") {
-                updateDisplay("✅ Access Granted! Redirecting. do you acknolage you have entered spi*ital* mode? press 1 for yes. press 2 for no.");
+                updateDisplay("✅ Access Granted! Redirecting. do you acknowlage you have entered spi*ital* mode? press 1 for yes. press 2 for no.");
                 currentState = "GAME_MODE";
               } else {
                 updateDisplay("❌ Incorrect Code. Try again.");
