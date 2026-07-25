@@ -104,7 +104,7 @@ text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
 </head>
 <body>
 
-    <div class="version-tag">ver 1.23</div>
+    <div class="version-tag">ver 1.24</div>
   <div class="phone-container">
     <div id="display">
       <div id="screen-text">Welcome! Enter your code followed by #</div>
@@ -429,7 +429,7 @@ hiddenInput.addEventListener("input", () => {
       hiddenInput.value = "";              // Clear input
       hiddenInput.blur();                 // Hide mobile keyboard
     }
-    
+    return; // 👈 Safe here! It stops handleKeyPress early.
   }
 
   // 2. Admin State ...
