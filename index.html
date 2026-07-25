@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <title>Automated Phone System</title>
   <style>
+    /* 🟢 Matrix Gradient Effect */
+    .matrix-vibe {
+      background: linear-gradient(180deg, #00ff66, #004411);
+      background-clip: text; /* 👈 Standard property added to fix the warning! */
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
 
     .version-tag {
       position: fixed;
@@ -99,7 +106,7 @@
 </head>
 <body>
 
-    <div class="version-tag">ver 1.8</div>
+    <div class="version-tag">ver 1.9</div>
   <div class="phone-container">
     <div id="display">
       <div id="screen-text">Welcome! Enter your code followed by #</div>
@@ -200,25 +207,29 @@
         nextState: "SPECIAL_CODE"
       },
       "GAME_MODE": {
-        text: "you have entered spi*ita* mode",
-        parent: "GAME_MODE",
+        text: "do you acknolage you have entered spi*ital* mode? press 1 for yes. press 2 for no. Press * to return.",
+        parent: "SPECIAL_CODE",
         options: {
-          "1": ""
+          "1": "SPI*ITA*_MODE",
+          "2": "BACK_OUT"
         }
       },
-      "": {
-        text: "",
+      "BACK_OUT": {
+        text: "you have backed out of your option. press 1 to go to menu. press 2 to book a schedule. press 3 to enter a code.",
+        parent: "MAIN_MENU",
+        options: {
+          "1": "MAIN_MENU",
+          "2": "BOOK_SCHEDULE",
+          "3": "SPECIAL_CODE"
+        }
+      },
+      "SPI*ITA*_MODE": {
+        text: "You have entered into Spi*ital mode.",
+        matrixVibe: true,
         parent: "",
         options: {
           "1": ""
-        }
-      },
-      "": {
-        text: "",
-        parent: "",
-        options: {
-          "1": ""
-        }
+        },
       },
       "": {
         text: "",
@@ -272,11 +283,19 @@
       }
     }
 
-    // Update Screen & Speak
-    function updateDisplay(text) {
-      screenText.textContent = text;
-      speak(text);
+    // 🟢 Update Screen & Speak Function
+  function updateDisplay(text) {
+    screenText.textContent = text;
+
+    // 🟢 Toggle Matrix effect based on menu property
+    if (menuTree[currentState] && menuTree[currentState].matrixVibe) {
+      screenText.classList.add("matrix-vibe");
+    } else {
+      screenText.classList.remove("matrix-vibe"); // Reset to standard text
     }
+
+    speak(text);
+  }
 
     // Keypad Listeners
     keys.forEach(key => {
@@ -434,8 +453,8 @@
             // 🔒 3. Handling 4-Digit Special Code
             else if (currentState === "SPECIAL_CODE") {
               if (currentInput === "2983") {
-                updateDisplay("✅ Access Granted!");
-                currentState = "MAIN_MENU";
+                updateDisplay("✅ Access Granted! Redirecting");
+                currentState = "GAME_MODE";
               } else {
                 updateDisplay("❌ Incorrect Code. Try again.");
               }
