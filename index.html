@@ -104,7 +104,7 @@
 </head>
 <body>
 
-  <div class="version-tag">ver 1.33</div>
+  <div class="version-tag">ver 1.34</div>
   <div class="phone-container">
     <div id="display">
       <div id="screen-text">Welcome! Enter your code followed by #</div>
@@ -375,6 +375,20 @@ function speak(text) {
         }
         return; // Stops here so it doesn't trigger standard menu buttons
       }
+      function handleInputSubmit(inputText) {
+      const currentMenu = menuTree[currentState];
+
+      // 💾 Save the typed text to the active customer's log history!
+      if (activeCustomer && inputText.trim() !== "") {
+        activeCustomer.logs.push(`Typed: "${inputText.trim()}"`);
+      }
+
+      // Go to the next screen defined in menuTree
+      if (currentMenu && currentMenu.nextState) {
+        currentState = currentMenu.nextState;
+        updateDisplay(menuTree[currentState].text);
+      }
+    }
 
       // 🟢 2. Admin State
       if (currentState === "ADMIN_MODE") {
