@@ -375,6 +375,21 @@ function updateDisplay(text) {
         handleKeyPress(key.textContent);
       });
     });
+    hiddenInput.addEventListener("input", () => {
+  // Get the base message for the current menu item
+  const currentPrompt = menuTree[currentState].text;
+
+  // Display the prompt text PLUS whatever the user has typed so far!
+  screenText.textContent = `${currentPrompt} ${hiddenInput.value}`;
+
+  // If they typed '#', process the submission
+  if (hiddenInput.value.endsWith("#")) {
+    const submittedText = hiddenInput.value.slice(0, -1);
+    handleInputSubmit(submittedText);
+    hiddenInput.value = "";
+    hiddenInput.blur();
+  }
+});
 
     // Main Router
     function handleKeyPress(val) {
