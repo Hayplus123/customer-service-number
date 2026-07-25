@@ -104,7 +104,7 @@
 </head>
 <body>
 
-  <div class="version-tag">ver 1.31</div>
+  <div class="version-tag">ver 1.32</div>
   <div class="phone-container">
     <div id="display">
       <div id="screen-text">Welcome! Enter your code followed by #</div>
@@ -286,8 +286,6 @@
 
      // 🔊 Text-To-Speech
 
-    function speak(text) {
-
       function speak(text) {
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel();
@@ -305,7 +303,6 @@
     window.speechSynthesis.speak(utterance);
   }
 }
-    } 
 
     function typeText(text, callback) {
       clearInterval(typingInterval);
