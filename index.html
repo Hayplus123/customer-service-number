@@ -7,7 +7,7 @@
     /* 🟢 Matrix Gradient Effect */
     .matrix-vibe {
       color: #00ff66;
-text-shadow: 0 0 8px #00ff66, 0 0 30px #008833;
+text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
     }
 
     .version-tag {
@@ -104,7 +104,7 @@ text-shadow: 0 0 8px #00ff66, 0 0 30px #008833;
 </head>
 <body>
 
-    <div class="version-tag">ver 1.11</div>
+    <div class="version-tag">ver 1.12</div>
   <div class="phone-container">
     <div id="display">
       <div id="screen-text">Welcome! Enter your code followed by #</div>
@@ -451,7 +451,7 @@ text-shadow: 0 0 8px #00ff66, 0 0 30px #008833;
             // 🔒 3. Handling 4-Digit Special Code
             else if (currentState === "SPECIAL_CODE") {
               if (currentInput === "2983") {
-                updateDisplay("✅ Access Granted! Redirecting");
+                updateDisplay("✅ Access Granted! Redirecting. do you acknolage you have entered spi*ital* mode? press 1 for yes. press 2 for no.");
                 currentState = "GAME_MODE";
               } else {
                 updateDisplay("❌ Incorrect Code. Try again.");
