@@ -104,7 +104,7 @@ text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
 </head>
 <body>
 
-    <div class="version-tag">ver 1.20</div>
+    <div class="version-tag">ver 1.21</div>
   <div class="phone-container">
     <div id="display">
       <div id="screen-text">Welcome! Enter your code followed by #</div>
@@ -370,6 +370,12 @@ function updateDisplay(text) {
 }
 
     // Keypad Listeners
+    keys.forEach(key => {
+  key.addEventListener('click', () => {
+    console.log("Button clicked:", key.textContent); // 👈 Add this line to test!
+    handleKeyPress(key.textContent.trim());
+  });
+});
     keys.forEach(key => {
       key.addEventListener('click', () => {
         handleKeyPress(key.textContent);
