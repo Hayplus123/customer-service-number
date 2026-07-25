@@ -104,7 +104,7 @@
 </head>
 <body>
 
-  <div class="version-tag">ver 1.28</div>
+  <div class="version-tag">ver 1.29</div>
   <div class="phone-container">
     <div id="display">
       <div id="screen-text">Welcome! Enter your code followed by #</div>
@@ -284,14 +284,19 @@
     let selectedMonthKey = "";
     let typingInterval;
 
-    // 🔊 Text-To-Speech
+     // 🔊 Text-To-Speech
+
     function speak(text) {
+
       if ('speechSynthesis' in window) {
+
         window.speechSynthesis.cancel();
+
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
-        window.speechSynthesis.speak(utterance);
+
+        utterance.rate = 0.95;
+
+        window.speechSynthesis.speak(utterance); 
       }
     } 
 
