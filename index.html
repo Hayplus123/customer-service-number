@@ -104,7 +104,7 @@
 </head>
 <body>
 
-  <div class="version-tag">ver 1.32</div>
+  <div class="version-tag">ver 1.33</div>
   <div class="phone-container">
     <div id="display">
       <div id="screen-text">Welcome! Enter your code followed by #</div>
@@ -286,20 +286,31 @@
 
      // 🔊 Text-To-Speech
 
-      function speak(text) {
+      // 🔊 Text-To-Speech (Set to Samantha)
+function speak(text) {
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
     
-    // 🔍 Find a standard English voice
+    const utterance = new SpeechSynthesisUtterance(text);
     const voices = window.speechSynthesis.getVoices();
-    const defaultVoice = voices.find(voice => voice.lang.includes('en'));
-    if (defaultVoice) {
-      utterance.voice = defaultVoice;
+
+    if (voices.length > 0) {
+      // 🔍 1. Look specifically for "Samantha"
+      const samantha = voices.find(v => v.name.includes('Samantha'));
+      
+      // 🔍 2. If Samantha isn't on this device, fall back to any English voice
+      const fallbackEnglish = voices.find(v => v.lang.startsWith('en'));
+
+      if (samantha) {
+        utterance.voice = samantha;
+      } else if (fallbackEnglish) {
+        utterance.voice = fallbackEnglish;
+      }
     }
 
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
+    utterance.rate = 1.0;  // Standard speed
+    utterance.pitch = 1.0; // Standard pitch
+
     window.speechSynthesis.speak(utterance);
   }
 }
