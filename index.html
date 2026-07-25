@@ -7,7 +7,7 @@
     /* 🟢 Matrix Gradient Effect */
     .matrix-vibe {
       color: #00ff66;
-text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
+      text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
     }
 
     .version-tag {
@@ -104,7 +104,7 @@ text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
 </head>
 <body>
 
-    <div class="version-tag">ver 1.25</div>
+  <div class="version-tag">ver 1.26</div>
   <div class="phone-container">
     <div id="display">
       <div id="screen-text">Welcome! Enter your code followed by #</div>
@@ -133,6 +133,7 @@ text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
     const screenText = document.getElementById('screen-text');
     const inputBuffer = document.getElementById('input-buffer');
     const keys = document.querySelectorAll('.key');
+    const hiddenInput = document.getElementById("hidden-input");
 
     // 🗂️ Customer Database
     const customerDatabase = {
@@ -140,7 +141,7 @@ text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
       "02": { name: "Esther", active: false, logs: [] }
     };
 
-    // 🗓️ Month Info Map with Max Days per Month
+    // 🗓️ Month Info Map
     const monthInfo = {
       "01": { name: "January", maxDays: 31 },
       "02": { name: "February", maxDays: 28 },
@@ -156,7 +157,7 @@ text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
       "12": { name: "December", maxDays: 31 }
     };
 
-    // 🌳 Data-Driven Menu Tree Structure
+    // 🌳 Menu Tree Structure
     const menuTree = {
       "MAIN_MENU": {
         text: "Press 1 for Scheduling, Press 2 for entering a special code.",
@@ -166,7 +167,6 @@ text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
           "2": "SPECIAL_CODE"
         }
       },
-      
       "BOOK_SCHEDULE": {
         text: "Press 1 to Book New Schedule. Press * to go back.",
         parent: "MAIN_MENU",
@@ -174,7 +174,6 @@ text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
           "1": "BOOK_NEW_SCHEDULE"
         }
       },
-      // ⚡ Step 1: Collect Month (2 Digits)
       "BOOK_NEW_SCHEDULE": {
         text: "Enter a 2-digit month (01 for Jan, 05 for May, 12 for Dec). Press * to go back.",
         parent: "BOOK_SCHEDULE",
@@ -182,7 +181,6 @@ text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
         length: 2,
         nextState: "SELECT_DAY"
       },
-      // ⚡ Step 2: Collect Day (2 Digits)
       "SELECT_DAY": {
         text: "Enter a 2-digit day. Press * to go back.",
         parent: "BOOK_NEW_SCHEDULE",
@@ -190,13 +188,11 @@ text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
         length: 2,
         nextState: "SCHEDULE_CONFIRMED"
       },
-      // 🎯 Step 3: Confirmation
       "SCHEDULE_CONFIRMED": {
         text: "Your schedule has been confirmed! Press * to return.",
         parent: "MAIN_MENU",
         options: {}
       },
-      
       "SPECIAL_CODE": {
         text: "Please enter your 4 digit code",
         parent: "MAIN_MENU",
@@ -230,9 +226,8 @@ text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
           "2": "AKSING_THINGS",
           "3": "HELP_IN_BATTLE",
           "4": "HELP",
-          "5": "NONE_OF_ABOVE",
-
-        },
+          "5": "NONE_OF_ABOVE"
+        }
       },
       "OPENING_SHIELD": {
         text: "Please enter all your details below",
@@ -240,16 +235,15 @@ text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
         matrixVibe: true,
         typing: true,
         inputRequired: true,
-         nextState: "CONFIRMATION_SCREEN" // 👈 Tell it where to go next!
-        },
-
+        nextState: "CONFIRMATION_SCREEN"
+      },
       "AKSING_THINGS": {
         text: "What would you like to ask?",
         parent: "SPI*ITA*_MODE",
         matrixVibe: true,
         typing: true,
         inputRequired: true,
-         nextState: "CONFIRMATION_SCREEN" // 👈 Tell it where to go next!
+        nextState: "CONFIRMATION_SCREEN"
       },
       "HELP_IN_BATTLE": {
         text: "What do you need help for?",
@@ -257,7 +251,7 @@ text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
         matrixVibe: true,
         typing: true,
         inputRequired: true,
-         nextState: "CONFIRMATION_SCREEN" // 👈 Tell it where to go next!
+        nextState: "CONFIRMATION_SCREEN"
       },
       "HELP": {
         text: "What do you need help for?",
@@ -265,7 +259,7 @@ text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
         matrixVibe: true,
         typing: true,
         inputRequired: true,
-         nextState: "CONFIRMATION_SCREEN" // 👈 Tell it where to go next!
+        nextState: "CONFIRMATION_SCREEN"
       },
       "NONE_OF_ABOVE": {
         text: "Please tell me your problem.",
@@ -273,27 +267,13 @@ text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
         matrixVibe: true,
         typing: true,
         inputRequired: true,
-         nextState: "CONFIRMATION_SCREEN" // 👈 Tell it where to go next!
+        nextState: "CONFIRMATION_SCREEN"
       },
-      "": {
-        text: "Thank you for contacting us, we would reply to you shortly. press * to go back",
+      "CONFIRMATION_SCREEN": {
+        text: "Thank you for contacting us, we will reply to you shortly. Press * to go back",
         parent: "MAIN_MENU",
         options: {
           "*": "MAIN_MENU"
-        }
-      },
-      "": {
-        text: "",
-        parent: "",
-        options: {
-          "1": ""
-        }
-      },
-      "": {
-        text: "",
-        parent: "",
-        options: {
-          "1": ""
         }
       }
     };
@@ -302,6 +282,7 @@ text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
     let activeCustomer = null;
     let currentInput = "";
     let selectedMonthKey = "";
+    let typingInterval;
 
     // 🔊 Text-To-Speech
     function speak(text) {
@@ -313,135 +294,74 @@ text-shadow: 0 0 8px #00ff66, 0 0 15px #008833;
       }
     } 
 
-    let typingInterval;
-
-function typeText(text, callback) {
-  // Clear any active typing animation
-  clearInterval(typingInterval);
-  screenText.textContent = "";
-
-  let index = 0;
-  typingInterval = setInterval(() => {
-    if (index < text.length) {
-      screenText.textContent += text.charAt(index);
-      index++;
-    } else {
+    function typeText(text, callback) {
       clearInterval(typingInterval);
-      if (callback) callback(); // Run speech or callback after typing finishes
+      screenText.textContent = "";
+
+      let index = 0;
+      typingInterval = setInterval(() => {
+        if (index < text.length) {
+          screenText.textContent += text.charAt(index);
+          index++;
+        } else {
+          clearInterval(typingInterval);
+          if (callback) callback();
+        }
+      }, 50);
     }
-  }, 50); // ⏱️ Speed in milliseconds per letter (lower = faster)
-}
 
-function handleInputSubmit(inputText) {
-  const currentMenu = menuTree[currentState];
-
-  // If the current screen has a nextState defined, go there!
-  if (currentMenu && currentMenu.nextState) {
-    currentState = currentMenu.nextState;
-    updateDisplay(menuTree[currentState].text);
-  }
-}
-
-    const hiddenInput = document.getElementById("hidden-input");
-
-function updateDisplay(text) {
-  // 1. Matrix Glow Effect
-  if (menuTree[currentState] && menuTree[currentState].matrixVibe) {
-    screenText.classList.add("matrix-vibe");
-  } else {
-    screenText.classList.remove("matrix-vibe");
-  }
-
-  // 2. Text Display & Speech
-  if (menuTree[currentState] && menuTree[currentState].typing) {
-    typeText(text, () => speak(text));
-  } else {
-    clearInterval(typingInterval);
-    screenText.textContent = text;
-    speak(text);
-  }
-
-  // 3. Trigger Keyboard for Mobile 📱
-  if (menuTree[currentState] && menuTree[currentState].inputRequired) {
-    hiddenInput.focus(); // Pops up mobile keyboard
-  } else {
-    hiddenInput.blur();  // Hides mobile keyboard
-  }
-}
-
-    // Keypad Listeners
-    keys.forEach(key => {
-  key.addEventListener('click', () => {
-    console.log("Button clicked:", key.textContent); // 👈 Add this line to test!
-    handleKeyPress(key.textContent.trim());
-  });
-});
-    keys.forEach(key => {
-      key.addEventListener('click', () => {
-        handleKeyPress(key.textContent);
-      });
-    });
-    hiddenInput.addEventListener("input", () => {
-  // Get the base message for the current menu item
-  const currentPrompt = menuTree[currentState].text;
-
-  // Display the prompt text PLUS whatever the user has typed so far!
-  screenText.textContent = `${currentPrompt} ${hiddenInput.value}`;
-
-  // If they typed '#', process the submission
-  if (hiddenInput.value.endsWith("#")) {
-    const submittedText = hiddenInput.value.slice(0, -1);
-    handleInputSubmit(submittedText);
-    hiddenInput.value = "";
-    hiddenInput.blur();
-  }
-});
-
-    // Main Router
-      function handleKeyPress(val) {
-  // 🟢 PUT SNIPPET HERE (Handles on-screen '#' key when typing)
-  if (menuTree[currentState]?.inputRequired && val === "#") {
-    handleInputSubmit(hiddenInput.value);
-    hiddenInput.value = "";
-    hiddenInput.blur();
-    return; // Stops the rest of the menu logic from running
-  }
-
-  // 🟢 PUT SNIPPET HERE (Handles keyboard typing + typed '#')
-hiddenInput.addEventListener("input", () => {
-  const currentPrompt = menuTree[currentState].text;
-  screenText.textContent = `${currentPrompt} ${hiddenInput.value}`;
-
-  if (hiddenInput.value.endsWith("#")) {
-    const submittedText = hiddenInput.value.slice(0, -1);
-    handleInputSubmit(submittedText);
-    hiddenInput.value = "";
-    hiddenInput.blur();
-  }
-});
-
-  // ... rest of your handleKeyPress code (like ADMIN_MODE) ...
-
-  // 🟢 1. Check if the current screen requires text typing
-  if (menuTree[currentState] && menuTree[currentState].inputRequired) {
-    if (val === "#") {
-      handleInputSubmit(hiddenInput.value); // 🚀 Submit the typed text!
-      hiddenInput.value = "";              // Clear input
-      hiddenInput.blur();                 // Hide mobile keyboard
+    function handleInputSubmit(inputText) {
+      const currentMenu = menuTree[currentState];
+      if (currentMenu && currentMenu.nextState) {
+        currentState = currentMenu.nextState;
+        updateDisplay(menuTree[currentState].text);
+      }
     }
-    return; // 👈 Safe here! It stops handleKeyPress early.
-  }
-}
 
-  // 2. Admin State ...
-      // 1. Admin State (View & Delete Customer Data)
+    function updateDisplay(text) {
+      // 1. Matrix Glow Effect
+      if (menuTree[currentState] && menuTree[currentState].matrixVibe) {
+        screenText.classList.add("matrix-vibe");
+      } else {
+        screenText.classList.remove("matrix-vibe");
+      }
+
+      // 2. Text Display & Speech
+      if (menuTree[currentState] && menuTree[currentState].typing) {
+        typeText(text, () => speak(text));
+      } else {
+        clearInterval(typingInterval);
+        screenText.textContent = text;
+        speak(text);
+      }
+
+      // 3. Trigger Keyboard for Mobile
+      if (menuTree[currentState] && menuTree[currentState].inputRequired) {
+        hiddenInput.focus();
+      } else {
+        hiddenInput.blur();
+      }
+    }
+
+    // 🔀 Main Router Function
+    function handleKeyPress(val) {
+      // 🟢 1. Check for typing screen input FIRST
+      if (menuTree[currentState]?.inputRequired) {
+        if (val === "#") {
+          handleInputSubmit(hiddenInput.value);
+          hiddenInput.value = "";
+          hiddenInput.blur();
+        }
+        return; // Stops here so it doesn't trigger standard menu buttons
+      }
+
+      // 🟢 2. Admin State
       if (currentState === "ADMIN_MODE") {
         if (val === "*") {
           currentInput = "";
           inputBuffer.textContent = "";
           resetToIdle("Logged out of Admin Mode.");
         } else if (val === "#") {
-          // Process Customer Deletion
           if (customerDatabase[currentInput]) {
             customerDatabase[currentInput].logs = [];
             updateDisplay(`Cleared logs for ID ${currentInput}!`);
@@ -450,7 +370,7 @@ hiddenInput.addEventListener("input", () => {
           }
           currentInput = "";
           inputBuffer.textContent = "";
-          setTimeout(showAdminLogs, 1500); // Return to log display
+          setTimeout(showAdminLogs, 1500);
         } else {
           currentInput += val;
           inputBuffer.textContent = currentInput;
@@ -458,19 +378,19 @@ hiddenInput.addEventListener("input", () => {
         return;
       }
 
-      // 2. Identity Confirmation State
+      // 🟢 3. Identity Confirmation State
       if (currentState === "CONFIRM_IDENTITY") {
         handleIdentityConfirmation(val);
         return;
       }
 
-      // 3. Customer Menu Navigation & Dynamic Digit Input State
+      // 🟢 4. Menu Navigation & Dynamic Collector Logic
       if (menuTree[currentState]) {
         handleMenuNavigation(val);
         return;
       }
 
-      // 4. Default IDLE State Keypad Typing
+      // 🟢 5. Default IDLE State Keypad Typing
       if (val === '*') {
         currentInput = "";
         inputBuffer.textContent = "";
@@ -482,6 +402,7 @@ hiddenInput.addEventListener("input", () => {
         currentInput += val;
         inputBuffer.textContent = currentInput;
       }
+    }
 
     // Code Submission Handler
     function processCodeSubmission(code) {
@@ -533,19 +454,18 @@ hiddenInput.addEventListener("input", () => {
         return;
       }
 
-      // ⚡ Handle Dynamic Input Collection Mode
+      // Dynamic Input Collection Mode
       if (currentMenu.type === "COLLECT_DIGITS") {
         if (val >= "0" && val <= "9") {
           currentInput += val;
-          inputBuffer.textContent = currentInput; // 👈 Shows typed digit instantly!
+          inputBuffer.textContent = currentInput;
 
           if (currentInput.length === currentMenu.length) {
-            
-            // 🗓️ 1. Handling Month Selection
+            // Month Selection
             if (currentState === "BOOK_NEW_SCHEDULE") {
               const selectedData = monthInfo[currentInput];
               if (selectedData) {
-                selectedMonthKey = currentInput; // Store selected month
+                selectedMonthKey = currentInput;
                 if (activeCustomer) activeCustomer.logs.push(`Month: ${selectedData.name}`);
                 currentInput = "";
                 inputBuffer.textContent = "";
@@ -557,8 +477,7 @@ hiddenInput.addEventListener("input", () => {
                 updateDisplay("❌ Invalid month (01-12). Re-enter 2-digit month.");
               }
             } 
-            
-            // 📆 2. Handling Day Selection
+            // Day Selection
             else if (currentState === "SELECT_DAY") {
               const dayNum = parseInt(currentInput, 10);
               const maxAllowedDays = monthInfo[selectedMonthKey]?.maxDays || 31;
@@ -576,8 +495,7 @@ hiddenInput.addEventListener("input", () => {
                 updateDisplay(`❌ Invalid day. ${monthName} only has ${maxAllowedDays} days.`);
               }
             }
-            
-            // 🔒 3. Handling 4-Digit Special Code
+            // 4-Digit Special Code
             else if (currentState === "SPECIAL_CODE") {
               if (currentInput === "2983") {
                 updateDisplay("✅ Access Granted! Redirecting. do you acknowlage you have entered spi*ital* mode? press 1 for yes. press 2 for no.");
@@ -588,7 +506,6 @@ hiddenInput.addEventListener("input", () => {
               currentInput = "";
               inputBuffer.textContent = "";
             }
-
           }
         }
         return;
@@ -609,13 +526,11 @@ hiddenInput.addEventListener("input", () => {
     // Display Admin Logs
     function showAdminLogs() {
       let summary = "📊 CUSTOMER LOGS:\n";
-
       for (let id in customerDatabase) {
         const cust = customerDatabase[id];
         const logHistory = cust.logs.length > 0 ? cust.logs.join(" > ") : "No activity";
         summary += `${cust.name} (${id}): [${logHistory}]\n`;
       }
-
       summary += "\nType ID + # to clear logs. Press * to exit.";
       updateDisplay(summary);
     }
@@ -629,8 +544,26 @@ hiddenInput.addEventListener("input", () => {
       inputBuffer.textContent = "";
       updateDisplay(message || "Welcome! Enter your code followed by #");
     }
+
+    // 🎧 Event Listeners
+    keys.forEach(key => {
+      key.addEventListener('click', () => {
+        handleKeyPress(key.textContent.trim());
+      });
+    });
+
+    hiddenInput.addEventListener("input", () => {
+      const currentPrompt = menuTree[currentState]?.text || "";
+      screenText.textContent = `${currentPrompt} ${hiddenInput.value}`;
+
+      if (hiddenInput.value.endsWith("#")) {
+        const submittedText = hiddenInput.value.slice(0, -1);
+        handleInputSubmit(submittedText);
+        hiddenInput.value = "";
+        hiddenInput.blur();
+      }
+    });
   </script>
 
 </body>
 </html>
-
