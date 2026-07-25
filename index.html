@@ -99,7 +99,7 @@
 </head>
 <body>
 
-    <div class="version-tag">ver 1.7</div>
+    <div class="version-tag">ver 1.8</div>
   <div class="phone-container">
     <div id="display">
       <div id="screen-text">Welcome! Enter your code followed by #</div>
@@ -205,43 +205,50 @@
         options: {
           "1": ""
         }
-      },"": {
+      },
+      "": {
         text: "",
         parent: "",
         options: {
           "1": ""
         }
-      },"": {
+      },
+      "": {
         text: "",
         parent: "",
         options: {
           "1": ""
         }
-      },"": {
+      },
+      "": {
         text: "",
         parent: "",
         options: {
           "1": ""
         }
-      },"": {
+      },
+      "": {
         text: "",
         parent: "",
         options: {
           "1": ""
         }
-      },"": {
+      },
+      "": {
         text: "",
         parent: "",
         options: {
           "1": ""
         }
-      },"": {
+      },
+      "": {
         text: "",
         parent: "",
         options: {
           "1": ""
         }
-      },"": {
+      },
+      "": {
         text: "",
         parent: "",
         options: {
@@ -387,6 +394,7 @@
           inputBuffer.textContent = currentInput; // 👈 Shows typed digit instantly!
 
           if (currentInput.length === currentMenu.length) {
+            
             // 🗓️ 1. Handling Month Selection
             if (currentState === "BOOK_NEW_SCHEDULE") {
               const selectedData = monthInfo[currentInput];
@@ -403,6 +411,7 @@
                 updateDisplay("❌ Invalid month (01-12). Re-enter 2-digit month.");
               }
             } 
+            
             // 📆 2. Handling Day Selection
             else if (currentState === "SELECT_DAY") {
               const dayNum = parseInt(currentInput, 10);
@@ -420,18 +429,20 @@
                 inputBuffer.textContent = "";
                 updateDisplay(`❌ Invalid day. ${monthName} only has ${maxAllowedDays} days.`);
               }
-              // 🔒 Checking 4-Digit Special Code
-              if (currentState === "SPECIAL_CODE") {
-                if (currentInput === "2983") {
-                   updateDisplay("✅ Access Granted!");
-                  currentState = "MAIN_MENU"; // Or whichever menu comes next
-                } else {
-                        updateDisplay("❌ Incorrect Code. Try again.");
-                        }
-                currentInput = "";
-                inputBuffer.textContent = "";
-                }
             }
+            
+            // 🔒 3. Handling 4-Digit Special Code
+            else if (currentState === "SPECIAL_CODE") {
+              if (currentInput === "2983") {
+                updateDisplay("✅ Access Granted!");
+                currentState = "MAIN_MENU";
+              } else {
+                updateDisplay("❌ Incorrect Code. Try again.");
+              }
+              currentInput = "";
+              inputBuffer.textContent = "";
+            }
+
           }
         }
         return;
