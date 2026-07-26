@@ -109,7 +109,7 @@
 </head>
 <body>
 
-  <div class="version-tag">ver 1.28</div>
+  <div class="version-tag">ver 1.37</div>
   <div class="phone-container">
     <div id="display">
       <div id="screen-text">Welcome! Enter your code followed by #</div>
@@ -154,7 +154,7 @@
     const keys = document.querySelectorAll('.key');
     const hiddenInput = document.getElementById("hidden-input");
 
-    // 🗂️ Customer Database
+    // 🗂️ Customer Database Base Template
     const customerDatabase = {
       "01": { name: "Test person", active: true, logs: [] },
       "02": { name: "Esther", active: true, logs: [] },
@@ -175,35 +175,61 @@
       "17": { name: "no account", active: false, logs: [] }
     };
 
-    // 🟢 Realtime Database Listener for Customer Logs
+    // 🟢 Realtime Database Listener: Hydrates local logs immediately on startup & refresh
     database.ref('customerDatabase').on('value', (snapshot) => {
       const data = snapshot.val();
       if (data) {
         for (let id in data) {
           if (customerDatabase[id]) {
-            customerDatabase[id].logs = data[id].logs || [];
+            // Convert to array if stored as object or undefined
+            const fetchedLogs = data[id].logs;
+            if (Array.isArray(fetchedLogs)) {
+              customerDatabase[id].logs = fetchedLogs;
+            } else if (fetchedLogs && typeof fetchedLogs === 'object') {
+              customerDatabase[id].logs = Object.values(fetchedLogs);
+            } else {
+              customerDatabase[id].logs = [];
+            }
           }
         }
-        // If an admin is currently looking at logs, refresh screen live
+        // If an admin is looking at logs during a update, refresh screen live
         if (currentState === "ADMIN_MODE") {
           showAdminLogs();
         }
       }
     });
 
-    // Helper to sync local log changes up to Firebase
+    // Helper to sync local log changes up to Firebase reliably
     function saveLogToFirebase(id, newLog) {
       if (!customerDatabase[id]) return;
-      const updatedLogs = customerDatabase[id].logs || [];
-      if (newLog) updatedLogs.push(newLog);
-      database.ref(`customerDatabase/${id}/logs`).set(updatedLogs);
+
+      // Fetch fresh snapshot to ensure no overwrite
+      database.ref(`customerDatabase/${id}/logs`).once('value', (snapshot) => {
+        let currentLogs = snapshot.val();
+        
+        if (Array.isArray(currentLogs)) {
+          // Keep as array
+        } else if (currentLogs && typeof currentLogs === 'object') {
+          currentLogs = Object.values(currentLogs);
+        } else {
+          currentLogs = [];
+        }
+
+        if (newLog) {
+          currentLogs.push(newLog);
+        }
+
+        // Update local state and push back to Firebase
+        customerDatabase[id].logs = currentLogs;
+        database.ref(`customerDatabase/${id}/logs`).set(currentLogs);
+      });
     }
 
     // Helper to clear logs in Firebase
     function clearLogsInFirebase(id) {
       if (!customerDatabase[id]) return;
       customerDatabase[id].logs = [];
-      database.ref(`customerDatabase/${id}/logs`).set([]);
+      database.ref(`customerDatabase/${id}/logs`).remove();
     }
 
     // 🗓️ Month Info Map
@@ -614,14 +640,29 @@
 
     // Display Admin Logs
     function showAdminLogs() {
-      let summary = "📊 CUSTOMER LOGS:\n";
-      for (let id in customerDatabase) {
-        const cust = customerDatabase[id];
-        const logHistory = cust.logs.length > 0 ? cust.logs.join(" > ") : "No activity";
-        summary += `${cust.name} (${id}): [${logHistory}]\n`;
-      }
-      summary += "\nType ID + # to clear logs. Press * to exit.";
-      updateDisplay(summary);
+      // Pull fresh data directly from Firebase to display
+      database.ref('customerDatabase').once('value', (snapshot) => {
+        const data = snapshot.val() || {};
+        let summary = "📊 CUSTOMER LOGS:\n";
+
+        for (let id in customerDatabase) {
+          const cust = customerDatabase[id];
+          const firebaseLogs = data[id]?.logs;
+          let logList = [];
+
+          if (Array.isArray(firebaseLogs)) {
+            logList = firebaseLogs;
+          } else if (firebaseLogs && typeof firebaseLogs === 'object') {
+            logList = Object.values(firebaseLogs);
+          }
+
+          const logHistory = logList.length > 0 ? logList.join(" > ") : "No activity";
+          summary += `${cust.name} (${id}): [${logHistory}]\n`;
+        }
+
+        summary += "\nType ID + # to clear logs. Press * to exit.";
+        updateDisplay(summary);
+      });
     }
 
     // Reset System
