@@ -109,7 +109,7 @@
 </head>
 <body>
 
-  <div class="version-tag">ver 1.37</div>
+  <div class="version-tag">ver 2.0</div>
   <div class="phone-container">
     <div id="display">
       <div id="screen-text">Welcome! Enter your code followed by #</div>
@@ -149,6 +149,9 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
+    // 🟢 Google Apps Script Web App Endpoint URL
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwWgfrp7SapCKzvBlf0PomMrGE6J_pqcp8jxEv3R-IMqiy2NCMHV2xtHHBCZT9AYCGV/exec";
+
     const screenText = document.getElementById('screen-text');
     const inputBuffer = document.getElementById('input-buffer');
     const keys = document.querySelectorAll('.key');
@@ -181,7 +184,6 @@
       if (data) {
         for (let id in data) {
           if (customerDatabase[id]) {
-            // Convert to array if stored as object or undefined
             const fetchedLogs = data[id].logs;
             if (Array.isArray(fetchedLogs)) {
               customerDatabase[id].logs = fetchedLogs;
@@ -192,18 +194,16 @@
             }
           }
         }
-        // If an admin is looking at logs during a update, refresh screen live
         if (currentState === "ADMIN_MODE") {
           showAdminLogs();
         }
       }
     });
 
-    // Helper to sync local log changes up to Firebase reliably
+    // Helper to sync local log changes up to Firebase
     function saveLogToFirebase(id, newLog) {
       if (!customerDatabase[id]) return;
 
-      // Fetch fresh snapshot to ensure no overwrite
       database.ref(`customerDatabase/${id}/logs`).once('value', (snapshot) => {
         let currentLogs = snapshot.val();
         
@@ -219,7 +219,6 @@
           currentLogs.push(newLog);
         }
 
-        // Update local state and push back to Firebase
         customerDatabase[id].logs = currentLogs;
         database.ref(`customerDatabase/${id}/logs`).set(currentLogs);
       });
@@ -230,6 +229,26 @@
       if (!customerDatabase[id]) return;
       customerDatabase[id].logs = [];
       database.ref(`customerDatabase/${id}/logs`).remove();
+    }
+
+    // 🟢 Helper to send booking details to Google Calendar via Apps Script
+    function sendToGoogleCalendar(userName, month, day) {
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          userName: userName,
+          month: month,
+          day: day
+        })
+      }).then(() => {
+        console.log("Sent schedule request to Google Calendar!");
+      }).catch(err => {
+        console.error("Error sending schedule to Calendar:", err);
+      });
     }
 
     // 🗓️ Month Info Map
@@ -395,8 +414,8 @@
           }
         }
 
-        utterance.rate = 1.0;  // Standard speed
-        utterance.pitch = 1.0; // Standard pitch
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
 
         window.speechSynthesis.speak(utterance);
       }
@@ -421,7 +440,6 @@
     function handleInputSubmit(inputText) {
       const currentMenu = menuTree[currentState];
 
-      // 💾 Save the typed text to the active customer's log history in Firebase
       if (activeCustomerId && inputText.trim() !== "") {
         saveLogToFirebase(activeCustomerId, `Typed: "${inputText.trim()}"`);
       }
@@ -433,14 +451,12 @@
     }
 
     function updateDisplay(text) {
-      // 1. Matrix Glow Effect
       if (menuTree[currentState] && menuTree[currentState].matrixVibe) {
         screenText.classList.add("matrix-vibe");
       } else {
         screenText.classList.remove("matrix-vibe");
       }
 
-      // 2. Text Display & Speech
       if (menuTree[currentState] && menuTree[currentState].typing) {
         typeText(text, () => speak(text));
       } else {
@@ -449,7 +465,6 @@
         speak(text);
       }
 
-      // 3. Trigger Keyboard for Mobile
       if (menuTree[currentState] && menuTree[currentState].inputRequired) {
         hiddenInput.focus();
       } else {
@@ -459,17 +474,15 @@
 
     // 🔀 Main Router Function
     function handleKeyPress(val) {
-      // 🟢 1. Check for typing screen input FIRST
       if (menuTree[currentState]?.inputRequired) {
         if (val === "#") {
           handleInputSubmit(hiddenInput.value);
           hiddenInput.value = "";
           hiddenInput.blur();
         }
-        return; // Stops here so it doesn't trigger standard menu buttons
+        return;
       }
 
-      // 🟢 2. Admin State
       if (currentState === "ADMIN_MODE") {
         if (val === "*") {
           currentInput = "";
@@ -492,19 +505,16 @@
         return;
       }
 
-      // 🟢 3. Identity Confirmation State
       if (currentState === "CONFIRM_IDENTITY") {
         handleIdentityConfirmation(val);
         return;
       }
 
-      // 🟢 4. Menu Navigation & Dynamic Collector Logic
       if (menuTree[currentState]) {
         handleMenuNavigation(val);
         return;
       }
 
-      // 🟢 5. Default IDLE State Keypad Typing
       if (val === '*') {
         currentInput = "";
         inputBuffer.textContent = "";
@@ -518,7 +528,6 @@
       }
     }
 
-    // Code Submission Handler
     function processCodeSubmission(code) {
       if (code === "1835") {
         currentState = "ADMIN_MODE";
@@ -540,7 +549,6 @@
       }
     }
 
-    // Handle Identity Confirmation
     function handleIdentityConfirmation(val) {
       if (val === "1") {
         currentState = "MAIN_MENU";
@@ -552,11 +560,9 @@
       }
     }
 
-    // Menu Navigation & Dynamic Collector Logic
     function handleMenuNavigation(val) {
       const currentMenu = menuTree[currentState];
 
-      // Handle Back button '*'
       if (val === "*") {
         currentInput = "";
         inputBuffer.textContent = "";
@@ -569,7 +575,6 @@
         return;
       }
 
-      // Dynamic Input Collection Mode
       if (currentMenu.type === "COLLECT_DIGITS") {
         if (val >= "0" && val <= "9") {
           currentInput += val;
@@ -599,6 +604,11 @@
 
               if (dayNum >= 1 && dayNum <= maxAllowedDays) {
                 if (activeCustomerId) saveLogToFirebase(activeCustomerId, `Day: ${currentInput}`);
+
+                // 🟢 Push booking to Google Calendar
+                const customerName = activeCustomer ? activeCustomer.name : "Customer";
+                sendToGoogleCalendar(customerName, selectedMonthKey, currentInput);
+
                 currentInput = "";
                 inputBuffer.textContent = "";
                 currentState = currentMenu.nextState;
@@ -626,7 +636,6 @@
         return;
       }
 
-      // Standard Option Navigation
       if (currentMenu.options && currentMenu.options[val]) {
         if (activeCustomerId) {
           saveLogToFirebase(activeCustomerId, val);
@@ -638,9 +647,7 @@
       }
     }
 
-    // Display Admin Logs
     function showAdminLogs() {
-      // Pull fresh data directly from Firebase to display
       database.ref('customerDatabase').once('value', (snapshot) => {
         const data = snapshot.val() || {};
         let summary = "📊 CUSTOMER LOGS:\n";
@@ -665,7 +672,6 @@
       });
     }
 
-    // Reset System
     function resetToIdle(message) {
       currentState = "IDLE";
       activeCustomer = null;
@@ -676,7 +682,6 @@
       updateDisplay(message || "Welcome! Enter your code followed by #");
     }
 
-    // 🎧 Event Listeners
     keys.forEach(key => {
       key.addEventListener('click', () => {
         handleKeyPress(key.textContent.trim());
