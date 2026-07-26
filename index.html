@@ -3,6 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <title>Automated Phone System</title>
+
+  <!-- 🟢 Firebase SDKs (Realtime Database integration) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
   <style>
     /* 🟢 Matrix Gradient Effect */
     .matrix-vibe {
@@ -104,7 +109,7 @@
 </head>
 <body>
 
-  <div class="version-tag">ver 1.36</div>
+  <div class="version-tag">ver 1.28</div>
   <div class="phone-container">
     <div id="display">
       <div id="screen-text">Welcome! Enter your code followed by #</div>
@@ -130,6 +135,20 @@
   </div>
 
   <script>
+    // 🟢 Firebase Configuration & Initialization
+    const firebaseConfig = {
+      apiKey: "AIzaSyA087FxSliuOX-LxiOehyxrNe4qGMGltGA",
+      authDomain: "hayden-service-team.firebaseapp.com",
+      databaseURL: "https://hayden-service-team-default-rtdb.firebaseio.com",
+      projectId: "hayden-service-team",
+      storageBucket: "hayden-service-team.firebasestorage.app",
+      messagingSenderId: "784824586002",
+      appId: "1:784824586002:web:009bc268fc7d617255edcb"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
     const screenText = document.getElementById('screen-text');
     const inputBuffer = document.getElementById('input-buffer');
     const keys = document.querySelectorAll('.key');
@@ -153,9 +172,39 @@
       "14": { name: "no account", active: false, logs: [] },
       "15": { name: "no account", active: false, logs: [] },
       "16": { name: "no account", active: false, logs: [] },
-      "17": { name: "no account", active: false, logs: [] },
-
+      "17": { name: "no account", active: false, logs: [] }
     };
+
+    // 🟢 Realtime Database Listener for Customer Logs
+    database.ref('customerDatabase').on('value', (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        for (let id in data) {
+          if (customerDatabase[id]) {
+            customerDatabase[id].logs = data[id].logs || [];
+          }
+        }
+        // If an admin is currently looking at logs, refresh screen live
+        if (currentState === "ADMIN_MODE") {
+          showAdminLogs();
+        }
+      }
+    });
+
+    // Helper to sync local log changes up to Firebase
+    function saveLogToFirebase(id, newLog) {
+      if (!customerDatabase[id]) return;
+      const updatedLogs = customerDatabase[id].logs || [];
+      if (newLog) updatedLogs.push(newLog);
+      database.ref(`customerDatabase/${id}/logs`).set(updatedLogs);
+    }
+
+    // Helper to clear logs in Firebase
+    function clearLogsInFirebase(id) {
+      if (!customerDatabase[id]) return;
+      customerDatabase[id].logs = [];
+      database.ref(`customerDatabase/${id}/logs`).set([]);
+    }
 
     // 🗓️ Month Info Map
     const monthInfo = {
@@ -296,40 +345,36 @@
 
     let currentState = "IDLE";
     let activeCustomer = null;
+    let activeCustomerId = null;
     let currentInput = "";
     let selectedMonthKey = "";
     let typingInterval;
 
-     // 🔊 Text-To-Speech
+    // 🔊 Text-To-Speech (Set to Samantha)
+    function speak(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        const voices = window.speechSynthesis.getVoices();
 
-      // 🔊 Text-To-Speech (Set to Samantha)
-function speak(text) {
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
-    
-    const utterance = new SpeechSynthesisUtterance(text);
-    const voices = window.speechSynthesis.getVoices();
+        if (voices.length > 0) {
+          const samantha = voices.find(v => v.name.includes('Samantha'));
+          const fallbackEnglish = voices.find(v => v.lang.startsWith('en'));
 
-    if (voices.length > 0) {
-      // 🔍 1. Look specifically for "Samantha"
-      const samantha = voices.find(v => v.name.includes('Samantha'));
-      
-      // 🔍 2. If Samantha isn't on this device, fall back to any English voice
-      const fallbackEnglish = voices.find(v => v.lang.startsWith('en'));
+          if (samantha) {
+            utterance.voice = samantha;
+          } else if (fallbackEnglish) {
+            utterance.voice = fallbackEnglish;
+          }
+        }
 
-      if (samantha) {
-        utterance.voice = samantha;
-      } else if (fallbackEnglish) {
-        utterance.voice = fallbackEnglish;
+        utterance.rate = 1.0;  // Standard speed
+        utterance.pitch = 1.0; // Standard pitch
+
+        window.speechSynthesis.speak(utterance);
       }
     }
-
-    utterance.rate = 1.0;  // Standard speed
-    utterance.pitch = 1.0; // Standard pitch
-
-    window.speechSynthesis.speak(utterance);
-  }
-}
 
     function typeText(text, callback) {
       clearInterval(typingInterval);
@@ -349,6 +394,12 @@ function speak(text) {
 
     function handleInputSubmit(inputText) {
       const currentMenu = menuTree[currentState];
+
+      // 💾 Save the typed text to the active customer's log history in Firebase
+      if (activeCustomerId && inputText.trim() !== "") {
+        saveLogToFirebase(activeCustomerId, `Typed: "${inputText.trim()}"`);
+      }
+
       if (currentMenu && currentMenu.nextState) {
         currentState = currentMenu.nextState;
         updateDisplay(menuTree[currentState].text);
@@ -391,20 +442,6 @@ function speak(text) {
         }
         return; // Stops here so it doesn't trigger standard menu buttons
       }
-      function handleInputSubmit(inputText) {
-      const currentMenu = menuTree[currentState];
-
-      // 💾 Save the typed text to the active customer's log history!
-      if (activeCustomer && inputText.trim() !== "") {
-        activeCustomer.logs.push(`Typed: "${inputText.trim()}"`);
-      }
-
-      // Go to the next screen defined in menuTree
-      if (currentMenu && currentMenu.nextState) {
-        currentState = currentMenu.nextState;
-        updateDisplay(menuTree[currentState].text);
-      }
-    }
 
       // 🟢 2. Admin State
       if (currentState === "ADMIN_MODE") {
@@ -414,7 +451,7 @@ function speak(text) {
           resetToIdle("Logged out of Admin Mode.");
         } else if (val === "#") {
           if (customerDatabase[currentInput]) {
-            customerDatabase[currentInput].logs = [];
+            clearLogsInFirebase(currentInput);
             updateDisplay(`Cleared logs for ID ${currentInput}!`);
           } else {
             updateDisplay(`ID ${currentInput} not found.`);
@@ -471,6 +508,7 @@ function speak(text) {
         updateDisplay("⚠️ Account Expired. Call support.");
       } else {
         activeCustomer = customer;
+        activeCustomerId = code;
         currentState = "CONFIRM_IDENTITY";
         updateDisplay(`Hello, are you ${activeCustomer.name}? Press 1 for Yes, 2 for No.`);
       }
@@ -517,7 +555,7 @@ function speak(text) {
               const selectedData = monthInfo[currentInput];
               if (selectedData) {
                 selectedMonthKey = currentInput;
-                if (activeCustomer) activeCustomer.logs.push(`Month: ${selectedData.name}`);
+                if (activeCustomerId) saveLogToFirebase(activeCustomerId, `Month: ${selectedData.name}`);
                 currentInput = "";
                 inputBuffer.textContent = "";
                 currentState = currentMenu.nextState;
@@ -534,7 +572,7 @@ function speak(text) {
               const maxAllowedDays = monthInfo[selectedMonthKey]?.maxDays || 31;
 
               if (dayNum >= 1 && dayNum <= maxAllowedDays) {
-                if (activeCustomer) activeCustomer.logs.push(`Day: ${currentInput}`);
+                if (activeCustomerId) saveLogToFirebase(activeCustomerId, `Day: ${currentInput}`);
                 currentInput = "";
                 inputBuffer.textContent = "";
                 currentState = currentMenu.nextState;
@@ -564,8 +602,8 @@ function speak(text) {
 
       // Standard Option Navigation
       if (currentMenu.options && currentMenu.options[val]) {
-        if (activeCustomer) {
-          activeCustomer.logs.push(val);
+        if (activeCustomerId) {
+          saveLogToFirebase(activeCustomerId, val);
         }
         currentState = currentMenu.options[val];
         updateDisplay(menuTree[currentState].text);
@@ -590,6 +628,7 @@ function speak(text) {
     function resetToIdle(message) {
       currentState = "IDLE";
       activeCustomer = null;
+      activeCustomerId = null;
       currentInput = "";
       selectedMonthKey = "";
       inputBuffer.textContent = "";
